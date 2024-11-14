@@ -1,0 +1,58 @@
+<!-- templates/edit_store.html -->
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Edit Store</h2>
+<form method="POST">
+    {{ form.hidden_tag() }}
+    <div class="mb-3">
+        {{ form.title.label(class="form-label") }}
+        {{ form.title(class="form-control") }}
+    </div>
+    <div class="mb-3">
+        {{ form.latitude.label(class="form-label") }}
+        {{ form.latitude(class="form-control") }}
+    </div>
+    <div class="mb-3">
+        {{ form.longitude.label(class="form-label") }}
+        {{ form.longitude(class="form-control") }}
+    </div>
+    <div class="mb-3">
+        {{ form.description.label(class="form-label") }}
+        {{ form.description(class="form-control", rows="3") }}
+    </div>
+    <div class="mb-3">
+        {{ form.logo.label(class="form-label") }}
+        {{ form.logo(class="form-control") }}
+    </div>
+    <div class="mb-3">
+        {{ form.category.label(class="form-label") }}
+        {{ form.category(class="form-control") }}
+    </div>
+    <div class="mb-3">
+        {{ form.status.label(class="form-label") }}
+        {{ form.status(class="form-select") }}
+    </div>
+    <div class="mb-3">
+        {{ form.address.label(class="form-label") }}
+        {{ form.address(class="form-control") }}
+    </div>
+    <div class="mb-3">
+        {{ form.tradingHours.label(class="form-label") }}
+        {{ form.tradingHours(class="form-control") }}
+        <small class="form-text text-muted">Enter trading hours as a JSON string, e.g., {"Monday": "9-5", ...}</small>
+    </div>
+    <h4>Products</h4>
+    {% for product in form.products %}
+        <div class="mb-3">
+            {{ product.name.label(class="form-label") }}
+            {{ product.name(class="form-control") }}
+            {{ product.image.label(class="form-label") }}
+            {{ product.image(class="form-control") }}
+        </div>
+    {% endfor %}
+    <div class="mb-3">
+        {{ form.submit(class="btn btn-primary") }}
+    </div>
+</form>
+{% endblock %}

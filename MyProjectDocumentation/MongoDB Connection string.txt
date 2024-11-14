@@ -1,0 +1,7 @@
+string: mongodb+srv://Creecy230:7fHdMRHCsjqvRAvq@store-info-update-cluse.gduer.mongodb.net/
+
+download Mongosh CMD tool
+https://www.mongodb.com/try/download/shell
+
+connect Mongosh to DB
+mongosh mongodb+srv://Creecy230:7fHdMRHCsjqvRAvq@store-info-update-cluse.gduer.mongodb.net/

@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Store List</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        #storeList {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .store {
+            border: 1px solid #ccc;
+            padding: 15px;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+            cursor: pointer;
+        }
+        .store img {
+            max-width: 80px;
+            max-height: 80px;
+            margin-bottom: 10px;
+        }
+        .store h3 {
+            margin: 0;
+        }
+        .details {
+            display: none;
+            margin-top: 10px;
+        }
+        .button-container {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        button {
+            cursor: pointer;
+            padding: 8px 12px;
+            border: none;
+            border-radius: 3px;
+            background-color: #007bff;
+            color: white;
+            font-size: 14px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .edit-form {
+            display: none;
+            margin-top: 15px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation Bar -->
+<nav class="navbar navbar-expand-lg navbar-light bg-light mb-4">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="dashboard.html">Store Manager</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav">
+                <li class="nav-item">
+                    <a class="nav-link" href="dashboard.html">Home</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="AddStoreScreen.html">Add</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="StoreListScreen.html">List</a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+    <h1>Store List</h1>
+    <div id="storeList">Loading stores...</div>
+
+    <script>
+        async function fetchStores() {
+            try {
+                const response = await fetch('http://localhost:5000/api/stores');
+                if (!response.ok) throw new Error('Failed to load stores');
+                
+                const stores = await response.json();
+                const storeList = document.getElementById('storeList');
+                storeList.innerHTML = '';
+
+                stores.forEach(store => {
+                    const storeElement = document.createElement('div');
+                    storeElement.classList.add('store');
+                    
+                    storeElement.innerHTML = `
+                        <h3>${store.title}</h3>
+                        <img src="${store.logo || 'https://via.placeholder.com/80'}" alt="${store.title}">
+                        <p><strong>Category:</strong> ${store.category || 'N/A'}</p>
+                        <p><strong>Status:</strong> ${store.status || 'N/A'}</p>
+                        <div class="details">
+                            <p><strong>Location:</strong> ${store.latitude}, ${store.longitude}</p>
+                            <p><strong>Address:</strong> ${store.address || 'N/A'}</p>
+                            <p><strong>Trading Hours:</strong>
+                                <br> Monday: ${store.tradingHours?.Monday || 'Closed'}
+                                <br> Tuesday: ${store.tradingHours?.Tuesday || 'Closed'}
+                                <br> Wednesday: ${store.tradingHours?.Wednesday || 'Closed'}
+                                <br> Thursday: ${store.tradingHours?.Thursday || 'Closed'}
+                                <br> Friday: ${store.tradingHours?.Friday || 'Closed'}
+                                <br> Saturday: ${store.tradingHours?.Saturday || 'Closed'}
+                                <br> Sunday: ${store.tradingHours?.Sunday || 'Closed'}
+                            </p>
+                            <div class="button-container">
+                                <button onclick="editStore('${store._id}', '${store.title}', '${store.category}', '${store.status}', ${store.latitude}, ${store.longitude}, '${store.address}')">Edit</button>
+                                <button onclick="deleteStore('${store._id}')">Delete</button>
+                            </div>
+                        </div>
+                    `;
+                    
+                    storeElement.onclick = () => {
+                        const details = storeElement.querySelector('.details');
+                        details.style.display = details.style.display === 'none' ? 'block' : 'none';
+                    };
+                    
+                    storeList.appendChild(storeElement);
+                });
+            } catch (error) {
+                console.error('Error fetching stores:', error);
+                document.getElementById('storeList').innerText = 'Failed to load stores.';
+            }
+        }
+
+        async function deleteStore(storeId) {
+            if (!confirm("Are you sure you want to delete this store?")) return;
+
+            try {
+                const response = await fetch(`http://localhost:5000/api/stores/${storeId}`, {
+                    method: 'DELETE',
+                });
+
+                if (response.ok) {
+                    alert('Store deleted successfully');
+                    fetchStores();
+                } else {
+                    alert('Failed to delete store');
+                }
+            } catch (error) {
+                console.error('Error deleting store:', error);
+                alert('Error deleting store');
+            }
+        }
+
+        function editStore(id, title, category, status, latitude, longitude, address) {
+            // Display edit form with store data filled in
+            const editForm = document.createElement('div');
+            editForm.classList.add('edit-form');
+            editForm.innerHTML = `
+                <h3>Edit Store: ${title}</h3>
+                <label>Title: <input type="text" id="editTitle" value="${title}"></label><br><br>
+                <label>Category: <input type="text" id="editCategory" value="${category}"></label><br><br>
+                <label>Status: <select id="editStatus">
+                    <option value="open" ${status === 'open' ? 'selected' : ''}>Open</option>
+                    <option value="closed" ${status === 'closed' ? 'selected' : ''}>Closed</option>
+                </select></label><br><br>
+                <label>Latitude: <input type="number" id="editLatitude" value="${latitude}"></label><br><br>
+                <label>Longitude: <input type="number" id="editLongitude" value="${longitude}"></label><br><br>
+                <label>Address: <input type="text" id="editAddress" value="${address}"></label><br><br>
+                <button onclick="updateStore('${id}')">Save Changes</button>
+                <button onclick="cancelEdit()">Cancel</button>
+            `;
+            document.body.appendChild(editForm);
+        }
+
+        function cancelEdit() {
+            document.querySelector('.edit-form').remove();
+        }
+
+        async function updateStore(id) {
+            const updatedStoreData = {
+                title: document.getElementById('editTitle').value,
+                category: document.getElementById('editCategory').value,
+                status: document.getElementById('editStatus').value,
+                latitude: parseFloat(document.getElementById('editLatitude').value),
+                longitude: parseFloat(document.getElementById('editLongitude').value),
+                address: document.getElementById('editAddress').value
+            };
+
+            try {
+                const response = await fetch(`http://localhost:5000/api/stores/${id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(updatedStoreData)
+                });
+
+                if (response.ok) {
+                    alert('Store updated successfully');
+                    cancelEdit();
+                    fetchStores();
+                } else {
+                    alert('Failed to update store');
+                }
+            } catch (error) {
+                console.error('Error updating store:', error);
+                alert('Error updating store');
+            }
+        }
+
+        fetchStores();
+    </script>
+</body>
+</html>

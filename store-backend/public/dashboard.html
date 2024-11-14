@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
+        .badge {
+            font-size: 0.9em;
+        }
+        .edit-form-container {
+            display: none;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation Bar -->
+<nav class="navbar navbar-expand-lg navbar-light bg-light mb-4">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="dashboard.html">Store Manager</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav">
+                <li class="nav-item">
+                    <a class="nav-link" href="dashboard.html">Home</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="AddStoreScreen.html">Add</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="StoreListScreen.html">List</a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+    <h2>Dashboard</h2>
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Title</th>
+                <th>Category</th>
+                <th>Status</th>
+                <th>Address</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody id="dashboardStoreList">
+            <!-- Store rows will be inserted here by JavaScript -->
+        </tbody>
+    </table>
+
+    <!-- Edit Form -->
+    <div class="edit-form-container" id="editFormContainer">
+        <h3>Edit Store</h3>
+        <form id="editForm">
+            <div class="mb-3">
+                <label for="editTitle" class="form-label">Store Name</label>
+                <input type="text" id="editTitle" class="form-control" required>
+            </div>
+            <div class="mb-3">
+                <label for="editCategory" class="form-label">Category</label>
+                <input type="text" id="editCategory" class="form-control">
+            </div>
+            <div class="mb-3">
+                <label for="editStatus" class="form-label">Status</label>
+                <select id="editStatus" class="form-select">
+                    <option value="open">Open</option>
+                    <option value="closed">Closed</option>
+                </select>
+            </div>
+            <div class="mb-3">
+                <label for="editLatitude" class="form-label">Latitude</label>
+                <input type="number" id="editLatitude" class="form-control" required>
+            </div>
+            <div class="mb-3">
+                <label for="editLongitude" class="form-label">Longitude</label>
+                <input type="number" id="editLongitude" class="form-control" required>
+            </div>
+            <div class="mb-3">
+                <label for="editAddress" class="form-label">Address</label>
+                <input type="text" id="editAddress" class="form-control">
+            </div>
+            <button type="button" class="btn btn-primary" onclick="updateStore()">Save Changes</button>
+            <button type="button" class="btn btn-secondary" onclick="cancelEdit()">Cancel</button>
+        </form>
+    </div>
+
+    <script>
+        let currentEditStoreId = null;
+
+        async function fetchStores() {
+            try {
+                const response = await fetch('http://localhost:5000/api/stores');
+                if (!response.ok) throw new Error('Failed to load stores');
+                
+                const stores = await response.json();
+                const storeList = document.getElementById('dashboardStoreList');
+                storeList.innerHTML = '';
+
+                if (stores.length === 0) {
+                    storeList.innerHTML = '<tr><td colspan="5">No stores available.</td></tr>';
+                    return;
+                }
+
+                stores.forEach(store => {
+                    const storeRow = document.createElement('tr');
+                    
+                    storeRow.innerHTML = `
+                        <td>${store.title}</td>
+                        <td>${store.category || 'N/A'}</td>
+                        <td>
+                            <span class="badge ${store.status === 'open' ? 'bg-success' : 'bg-danger'}">
+                                ${store.status === 'open' ? 'Open' : 'Closed'}
+                            </span>
+                        </td>
+                        <td>${store.address || 'N/A'}</td>
+                        <td>
+                            <button class="btn btn-primary btn-sm" onclick="openEditForm('${store._id}', '${store.title}', '${store.category}', '${store.status}', ${store.latitude}, ${store.longitude}, '${store.address}')">Edit</button>
+                            <button class="btn btn-danger btn-sm" onclick="deleteStore('${store._id}')">Delete</button>
+                        </td>
+                    `;
+
+                    storeList.appendChild(storeRow);
+                });
+            } catch (error) {
+                console.error('Error fetching stores:', error);
+                document.getElementById('dashboardStoreList').innerHTML = '<tr><td colspan="5">Failed to load stores.</td></tr>';
+            }
+        }
+
+        async function deleteStore(storeId) {
+            if (!confirm("Are you sure you want to delete this store?")) return;
+
+            try {
+                const response = await fetch(`http://localhost:5000/api/stores/${storeId}`, {
+                    method: 'DELETE',
+                });
+
+                if (response.ok) {
+                    alert('Store deleted successfully');
+                    fetchStores();
+                } else {
+                    alert('Failed to delete store');
+                }
+            } catch (error) {
+                console.error('Error deleting store:', error);
+                alert('Error deleting store');
+            }
+        }
+
+        function openEditForm(id, title, category, status, latitude, longitude, address) {
+            // Store the current editing store ID
+            currentEditStoreId = id;
+
+            // Populate the edit form with store data
+            document.getElementById('editTitle').value = title;
+            document.getElementById('editCategory').value = category;
+            document.getElementById('editStatus').value = status;
+            document.getElementById('editLatitude').value = latitude;
+            document.getElementById('editLongitude').value = longitude;
+            document.getElementById('editAddress').value = address;
+
+            // Show the edit form
+            document.getElementById('editFormContainer').style.display = 'block';
+        }
+
+        function cancelEdit() {
+            // Hide the edit form and clear currentEditStoreId
+            document.getElementById('editFormContainer').style.display = 'none';
+            currentEditStoreId = null;
+        }
+
+        async function updateStore() {
+            const updatedStoreData = {
+                title: document.getElementById('editTitle').value,
+                category: document.getElementById('editCategory').value,
+                status: document.getElementById('editStatus').value,
+                latitude: parseFloat(document.getElementById('editLatitude').value),
+                longitude: parseFloat(document.getElementById('editLongitude').value),
+                address: document.getElementById('editAddress').value
+            };
+
+            try {
+                const response = await fetch(`http://localhost:5000/api/stores/${currentEditStoreId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(updatedStoreData)
+                });
+
+                if (response.ok) {
+                    alert('Store updated successfully');
+                    cancelEdit();
+                    fetchStores(); // Refresh the store list to show updated data
+                } else {
+                    alert('Failed to update store');
+                }
+            } catch (error) {
+                console.error('Error updating store:', error);
+                alert('Error updating store');
+            }
+        }
+
+        // Fetch stores on page load
+        fetchStores();
+    </script>
+</body>
+</html>

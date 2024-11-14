@@ -1,0 +1,5 @@
+MONGODB_URI=mongodb+srv://Creecy230:7fHdMRHCsjqvRAvq@store-info-update-cluse.gduer.mongodb.net/
+AWS_ACCESS_KEY_ID=AKIAT7JJUZMFMD2IB5MY
+AWS_SECRET_ACCESS_KEY=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
+AWS_BUCKET_NAME=dankmapsassets
+AWS_REGION=eu-north-1
