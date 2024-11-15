@@ -1,49 +1,35 @@
 // navigation/MainTabNavigator.js
 
 import React from 'react';
-import { TouchableOpacity, Image } from 'react-native';
+import { TouchableOpacity, Image, StyleSheet } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 
 // Import screen components
 import HomePage from '../screens/HomePage';
 import MapScreen from '../screens/MapScreen';
 import ProfileScreen from '../screens/Profile';
 
-import { createStackNavigator } from '@react-navigation/stack';
-
-// Create Bottom Tab Navigator and Stack Navigator instances
 const Tab = createBottomTabNavigator();
-const Stack = createStackNavigator();
 
 // Custom Add Button Component for Map
 function CentralAddButton({ onPress }) {
   return (
     <TouchableOpacity
-      style={{
-        top: -10,
-        justifyContent: 'center',
-        alignItems: 'center',
-        backgroundColor: '#000000', // Set background to black
-        width: 70,
-        height: 70,
-        borderRadius: 35,
-        shadowColor: '#000',
-        shadowOpacity: 0.3,
-        shadowOffset: { width: 0, height: 5 },
-      }}
+      style={styles.centralAddButton}
       onPress={onPress}
+      accessibilityLabel="Open Map"
     >
       <Image
         source={require('../assets/icons/marijuana.png')}
-        style={{ width: 32, height: 32, tintColor: 'white' }}
+        style={styles.centralAddButtonIcon}
       />
     </TouchableOpacity>
   );
 }
 
-// Create a function to wrap tabs without a header
-function Tabs({ navigation }) {
+// Main Tab Navigator
+export default function MainTabNavigator() {
   return (
     <Tab.Navigator
       initialRouteName="Home"
@@ -58,13 +44,21 @@ function Tabs({ navigation }) {
             iconName = 'account';
           }
 
-          return (
-            <MaterialCommunityIcons name={iconName} color={color} size={size} />
-          );
+          if (iconName) {
+            return (
+              <MaterialCommunityIcons name={iconName} color={color} size={size} />
+            );
+          }
+
+          return null;
         },
         tabBarActiveTintColor: '#23D82CFF',
         tabBarInactiveTintColor: 'gray',
         tabBarShowLabel: false,
+        tabBarStyle: {
+          height: 60,
+          paddingBottom: 5,
+        },
       })}
     >
       <Tab.Screen 
@@ -79,7 +73,10 @@ function Tabs({ navigation }) {
         options={{
           tabBarLabel: 'Map',
           tabBarIcon: ({ focused }) => (
-            <CentralAddButton onPress={() => navigation.navigate("Map")} />
+            <MaterialIcons name="map" size={24} color={focused ? '#23D82CFF' : 'gray'} />
+          ),
+          tabBarButton: (props) => (
+            <CentralAddButton onPress={props.onPress} />
           ),
         }}
       />
@@ -93,18 +90,23 @@ function Tabs({ navigation }) {
   );
 }
 
-export default function MainTabNavigator() {
-  return (
-    <Stack.Navigator
-      screenOptions={{
-        headerShown: false,
-      }}
-    >
-      <Stack.Screen
-        name="MainTabs"
-        component={Tabs}
-      />
-      {/* Add other Stack.Screen components here if needed, such as Login, Signup, etc. */}
-    </Stack.Navigator>
-  );
-}
+const styles = StyleSheet.create({
+  centralAddButton: {
+    top: -20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#000000',
+    width: 70,
+    height: 70,
+    borderRadius: 35,
+    shadowColor: '#000',
+    shadowOpacity: 0.3,
+    shadowOffset: { width: 0, height: 5 },
+    elevation: 5,
+  },
+  centralAddButtonIcon: {
+    width: 32,
+    height: 32,
+    tintColor: 'white',
+  },
+});

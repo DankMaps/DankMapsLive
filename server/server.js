@@ -92,6 +92,20 @@ app.get('/api/clients', async (req, res) => {
   }
 });
 
+// API endpoint to get a single client by ID
+app.get('/api/clients/:id', async (req, res) => {
+  try {
+    const client = await Client.findOne({ id: req.params.id });
+    if (!client) {
+      return res.status(404).json({ error: 'Client not found' });
+    }
+    res.json(client);
+  } catch (error) {
+    console.error('Error fetching client:', error);
+    res.status(500).json({ error: 'Error fetching client' });
+  }
+});
+
 // API endpoint to add a new client with optional manual id and image upload
 app.post('/api/clients', upload.single('logo'), async (req, res) => {
   try {

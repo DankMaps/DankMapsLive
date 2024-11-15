@@ -14,6 +14,7 @@ import RegisterScreen from './screens/RegisterScreen';
 import MainTabNavigator from './navigation/MainTabNavigator';
 import TermsOfUse from './screens/TermsOfUse'; // Import TermsOfUse
 import PrivacyPolicy from './screens/PrivacyPolicy'; // Import PrivacyPolicy
+import StorePage from './screens/StorePage'; // Import StorePage
 
 const Stack = createStackNavigator();
 
@@ -58,6 +59,18 @@ export default function App() {
           {/* Add TermsOfUse and PrivacyPolicy screens */}
           <Stack.Screen name="TermsOfUse" component={TermsOfUse} />
           <Stack.Screen name="PrivacyPolicy" component={PrivacyPolicy} />
+          <Stack.Screen 
+            name="StorePage" 
+            component={StorePage} 
+            options={{ 
+              headerShown: true, 
+              headerTitle: 'Store Details',
+              headerTintColor: '#2e7d32',
+              headerStyle: {
+                backgroundColor: '#fff',
+              },
+            }} 
+          />
         </Stack.Navigator>
       </NavigationContainer>
     </PaperProvider>

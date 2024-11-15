@@ -9,6 +9,7 @@ import {
   Share,
   Alert,
   Platform,
+  Linking, // Added import for Linking
 } from 'react-native';
 import {
   Card,
@@ -28,6 +29,7 @@ const StoreCard = ({
   toggleFavorite,
   getCategoryIcon,
   onCategoryPress,
+  onVisitStore, // New prop for navigation
 }) => {
   const theme = useTheme();
 
@@ -164,6 +166,20 @@ const StoreCard = ({
               color={theme.colors.primary}
             />
             <Title style={styles.actionLabel}>Share</Title>
+          </TouchableOpacity>
+
+          {/* Visit Store Button */}
+          <TouchableOpacity
+            style={styles.actionButton}
+            onPress={onVisitStore} // Invoke the navigation handler
+            accessibilityLabel="Visit Store"
+          >
+            <MaterialIcons
+              name="store"
+              size={24}
+              color={theme.colors.primary}
+            />
+            <Title style={styles.actionLabel}>Visit Store</Title>
           </TouchableOpacity>
         </View>
       )}

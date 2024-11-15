@@ -1,3 +1,5 @@
+// screens/HomePage.js
+
 import React, { useState, useEffect } from 'react';
 import {
   View,
@@ -7,6 +9,8 @@ import {
   Text,
   SafeAreaView,
   Image,
+  ActivityIndicator,
+  Alert,
 } from 'react-native';
 import axios from 'axios';
 import { Searchbar, useTheme } from 'react-native-paper';
@@ -14,6 +18,8 @@ import TopBar from '../components/TopBar';
 import { MaterialIcons, FontAwesome5 } from '@expo/vector-icons';
 import StoreCard from '../components/StoreCard';
 import { filterOptions } from '../src/data/filterOptions';
+import { useNavigation } from '@react-navigation/native'; // Import useNavigation
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function HomePage() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -21,7 +27,9 @@ export default function HomePage() {
   const [filteredData, setFilteredData] = useState([]);
   const [expandedItems, setExpandedItems] = useState({});
   const [favorites, setFavorites] = useState({});
+  const [loading, setLoading] = useState(true); // Loading state
   const theme = useTheme();
+  const navigation = useNavigation(); // Initialize navigation
 
   // Fetch clients from MongoDB API
   useEffect(() => {
@@ -29,12 +37,31 @@ export default function HomePage() {
       try {
         const response = await axios.get('http://darksamarai.ddns.net:3000/api/clients'); // Replace with your API endpoint
         setFilteredData(response.data);
+        setLoading(false);
       } catch (error) {
         console.error("Error fetching clients:", error);
+        Alert.alert('Error', 'Failed to load stores. Please try again later.');
+        setLoading(false);
       }
     };
 
     fetchClients();
+  }, []);
+
+  // Load favorites from AsyncStorage on mount
+  useEffect(() => {
+    const loadFavorites = async () => {
+      try {
+        const favoritesData = await AsyncStorage.getItem('favorites');
+        if (favoritesData) {
+          setFavorites(JSON.parse(favoritesData));
+        }
+      } catch (error) {
+        console.error('Error loading favorites:', error);
+      }
+    };
+
+    loadFavorites();
   }, []);
 
   const onChangeSearch = (query) => {
@@ -58,11 +85,17 @@ export default function HomePage() {
     setFilteredData(newData);
   };
 
-  const toggleFavorite = (id) => {
-    setFavorites((prevFavorites) => ({
-      ...prevFavorites,
-      [id]: !prevFavorites[id],
-    }));
+  const toggleFavorite = async (id) => {
+    try {
+      const updatedFavorites = {
+        ...favorites,
+        [id]: !favorites[id],
+      };
+      setFavorites(updatedFavorites);
+      await AsyncStorage.setItem('favorites', JSON.stringify(updatedFavorites));
+    } catch (error) {
+      console.error('Error updating favorites:', error);
+    }
   };
 
   const renderFilterItem = ({ item }) => {
@@ -112,6 +145,11 @@ export default function HomePage() {
       filterData(searchQuery, category);
     };
 
+    // Handler to navigate to StorePage
+    const handleVisitStore = () => {
+      navigation.navigate('StorePage', { id: item.id.toString() }); // Ensure id is a string
+    };
+
     return (
       <StoreCard
         item={item}
@@ -121,6 +159,7 @@ export default function HomePage() {
         toggleFavorite={() => toggleFavorite(item.id)}
         getCategoryIcon={getCategoryIcon}
         onCategoryPress={handleCategoryPress}
+        onVisitStore={handleVisitStore} // Pass the navigation handler
       />
     );
   };
@@ -149,6 +188,16 @@ export default function HomePage() {
         return null;
     }
   };
+
+  if (loading) {
+    // Display a loading indicator while fetching data
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#2e7d32" />
+        <Text style={styles.loadingText}>Loading stores...</Text>
+      </View>
+    );
+  }
 
   return (
     <SafeAreaView
@@ -196,7 +245,7 @@ export default function HomePage() {
         <FlatList
           data={filteredData}
           renderItem={renderStoreCard}
-          keyExtractor={(item) => item.id}
+          keyExtractor={(item) => item.id.toString()} // Ensure key is a string
           contentContainerStyle={styles.listContent}
           ItemSeparatorComponent={() => <View style={{ height: 16 }} />}
         />
@@ -273,5 +322,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingTop: 8,
     paddingBottom: 32,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    marginTop: 10,
+    fontSize: 16,
+    color: '#2e7d32',
   },
 });

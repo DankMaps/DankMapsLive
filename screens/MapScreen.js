@@ -25,7 +25,7 @@ import { useNavigation } from '@react-navigation/native';
 import io from 'socket.io-client';
 import { Card } from 'react-native-paper';
 import axios from 'axios';
-import { Modalize } from 'react-native-modalize';
+import { Modalize } from 'react-native-modalize'; // eslint-disable-line
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { MaterialIcons, FontAwesome5 } from '@expo/vector-icons';
 import Modal from 'react-native-modal'; // Import react-native-modal
@@ -84,13 +84,13 @@ export default function MapScreen() {
   // Helper function to calculate region that fits given coordinates
   const getRegionForCoordinates = (points) => {
     if (points.length === 0) return null;
-
-    let minLat, maxLat, minLng, maxLng;
   
+    let minLat, maxLat, minLng, maxLng;
+    
     // Initialize min and max with the first point
     minLat = maxLat = points[0].latitude;
     minLng = maxLng = points[0].longitude;
-
+  
     // Iterate over points to find min and max
     points.forEach(point => {
       minLat = Math.min(minLat, point.latitude);
@@ -98,13 +98,13 @@ export default function MapScreen() {
       minLng = Math.min(minLng, point.longitude);
       maxLng = Math.max(maxLng, point.longitude);
     });
-
+  
     const midLat = (minLat + maxLat) / 2;
     const midLng = (minLng + maxLng) / 2;
-
+  
     const latitudeDelta = (maxLat - minLat) * 1.5 || 0.05; // Add some padding
     const longitudeDelta = (maxLng - minLng) * 1.5 || 0.05; // Add some padding
-
+  
     return {
       latitude: midLat,
       longitude: midLng,
@@ -295,6 +295,12 @@ export default function MapScreen() {
     console.log('Favorite button pressed');
     // Implement favorite toggle logic here
     Alert.alert('Favorite', 'Store added to favorites.');
+  };
+
+  const handleVisitStore = () => {
+    if (selectedStore) {
+      navigation.navigate('StorePage', { storeId: selectedStore.id });
+    }
   };
 
   // Handle Modal Position Changes (Optional)
@@ -649,6 +655,16 @@ export default function MapScreen() {
                       />
                       <Text style={styles.actionLabel}>Favorite</Text>
                     </TouchableOpacity>
+
+                    {/* Visit Store Button */}
+                    <TouchableOpacity
+                      onPress={handleVisitStore}
+                      style={styles.actionButton}
+                      accessibilityLabel="Visit Store"
+                    >
+                      <Text style={[styles.actionLabel, { color: '#2e7d32', fontWeight: 'bold' }]}>Visit Store</Text>
+                    </TouchableOpacity>
+
                   </View>
                 </>
               )}
@@ -950,42 +966,6 @@ const styles = StyleSheet.create({
   },
   modal: {
     backgroundColor: 'transparent',
-  },
-  modalWrapper: {
-    justifyContent: 'flex-end',
-    margin: 0,
-  },
-  modalContainer: {
-    backgroundColor: 'white',
-    borderRadius: 10,
-    padding: 20,
-    alignItems: 'center',
-    maxHeight: '80%',
-  },
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 20,
-  },
-  modalItem: {
-    paddingVertical: 10,
-    width: '100%',
-    alignItems: 'center',
-  },
-  modalItemText: {
-    fontSize: 16,
-    color: '#333',
-  },
-  modalCloseButton: {
-    marginTop: 20,
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    backgroundColor: '#2e7d32',
-    borderRadius: 5,
-  },
-  modalCloseButtonText: {
-    color: '#fff',
-    fontSize: 16,
   },
   loadingContainer: {
     flex: 1,
