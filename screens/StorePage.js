@@ -18,7 +18,9 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 import axios from 'axios';
 import { MaterialIcons, FontAwesome5 } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Appbar, Chip, Button, useTheme } from 'react-native-paper';
+import { Chip, IconButton, useTheme } from 'react-native-paper';
+import * as SplashScreen from 'expo-splash-screen';
+import { useFonts, Montserrat_700Bold } from '@expo-google-fonts/montserrat';
 
 export default function StorePage() {
   const navigation = useNavigation();
@@ -29,6 +31,22 @@ export default function StorePage() {
   const [loading, setLoading] = useState(true);
   const [favorite, setFavorite] = useState(false);
   const theme = useTheme();
+
+  // Prevent the splash screen from auto-hiding
+  useEffect(() => {
+    SplashScreen.preventAutoHideAsync();
+  }, []);
+
+  // Load custom fonts
+  let [fontsLoaded] = useFonts({
+    Montserrat_700Bold,
+  });
+
+  useEffect(() => {
+    if (fontsLoaded) {
+      SplashScreen.hideAsync();
+    }
+  }, [fontsLoaded]);
 
   // Fetch store data when the component mounts
   useEffect(() => {
@@ -190,17 +208,8 @@ export default function StorePage() {
 
   return (
     <View style={styles.container}>
-      {/* Header */}
-      <Appbar.Header style={styles.header}>
-        <Appbar.BackAction onPress={handleGoBack} />
-        <Appbar.Content title={store.title} />
-        <Appbar.Action
-          icon={favorite ? 'heart' : 'heart-outline'}
-          color={favorite ? theme.colors.error : theme.colors.onSurface}
-          onPress={handleFavorite}
-          accessibilityLabel="Favorite"
-        />
-      </Appbar.Header>
+      {/* Store Title */}
+      <Text style={styles.storeTitle}>{store.title}</Text>
 
       <ScrollView contentContainerStyle={styles.contentContainer}>
         {/* Store Image */}
@@ -211,7 +220,7 @@ export default function StorePage() {
               : require('../assets/default-logo.png') // Provide a default image
           }
           style={styles.storeImage}
-          resizeMode="cover"
+          resizeMode="contain" // Changed from 'cover' to 'contain'
           accessible={true}
           accessibilityLabel={`${store.title} Logo`}
         />
@@ -246,41 +255,32 @@ export default function StorePage() {
 
         {/* Action Buttons */}
         <View style={styles.actionButtonsContainer}>
-          <Button
+          <IconButton
             icon="phone"
-            mode="contained"
+            color="#fff"
+            size={24}
             onPress={handleContact}
             style={styles.actionButton}
-            labelStyle={styles.actionButtonLabel}
-            contentStyle={styles.actionButtonContent}
             accessibilityLabel="Contact"
-          >
-            Contact
-          </Button>
+          />
 
-          <Button
+          <IconButton
             icon="map-marker"
-            mode="contained"
+            color="#fff"
+            size={24}
             onPress={handleDirections}
             style={styles.actionButton}
-            labelStyle={styles.actionButtonLabel}
-            contentStyle={styles.actionButtonContent}
             accessibilityLabel="Directions"
-          >
-            Directions
-          </Button>
+          />
 
-          <Button
+          <IconButton
             icon="share-variant"
-            mode="contained"
+            color="#fff"
+            size={24}
             onPress={handleShare}
             style={styles.actionButton}
-            labelStyle={styles.actionButtonLabel}
-            contentStyle={styles.actionButtonContent}
             accessibilityLabel="Share"
-          >
-            Share
-          </Button>
+          />
         </View>
       </ScrollView>
     </View>
@@ -291,12 +291,18 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#fff',
+    paddingHorizontal: 16, // Added horizontal padding
+    paddingTop: 16, // Added top padding
   },
-  header: {
-    backgroundColor: '#2e7d32',
+  storeTitle: {
+    fontFamily: 'Montserrat_700Bold', // Custom font
+    fontSize: 24,
+    color: '#2e7d32',
+    textAlign: 'center',
+    marginBottom: 16,
   },
   contentContainer: {
-    padding: 16,
+    paddingBottom: 20,
     alignItems: 'center',
   },
   storeImage: {
@@ -340,20 +346,13 @@ const styles = StyleSheet.create({
   actionButtonsContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    width: '100%',
+    width: '60%', // Adjusted width for better spacing
+    marginTop: 10,
   },
   actionButton: {
-    flex: 1,
-    marginHorizontal: 5,
     backgroundColor: '#2e7d32',
-  },
-  actionButtonLabel: {
-    fontSize: 14,
-    color: '#fff',
-  },
-  actionButtonContent: {
-    flexDirection: 'row-reverse',
-    paddingVertical: 8,
+    borderRadius: 30,
+    marginHorizontal: 5,
   },
   loadingContainer: {
     flex: 1,

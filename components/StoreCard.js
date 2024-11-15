@@ -4,7 +4,7 @@ import React from 'react';
 import {
   View,
   StyleSheet,
-  Image, // Ensure Image is imported
+  Image,
   TouchableOpacity,
 } from 'react-native';
 import {
@@ -23,7 +23,7 @@ const StoreCard = ({
   toggleFavorite,
   getCategoryIcon,
   onCategoryPress,
-  onVisitStore, // Prop for navigation
+  onVisitStore,
 }) => {
   const theme = useTheme();
 
@@ -102,8 +102,7 @@ const StoreCard = ({
         </View>
       </View>
 
-      {/* Removed Share Button */}
-      {/* If you have any additional layout adjustments, make them here */}
+      {/* Share Button Removed */}
     </Card>
   );
 };
@@ -180,7 +179,7 @@ const styles = StyleSheet.create({
     top: 10,
     right: 10,
   },
-  // Removed shareButtonContainer and related styles
+  // Share button styles removed
 });
 
 export default StoreCard;
