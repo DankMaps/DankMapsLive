@@ -8,9 +8,9 @@ import {
   TouchableOpacity,
   Text,
   SafeAreaView,
-  Image,
   ActivityIndicator,
   Alert,
+  Image, // Ensure Image is imported
 } from 'react-native';
 import axios from 'axios';
 import { Searchbar, useTheme } from 'react-native-paper';
@@ -18,14 +18,13 @@ import TopBar from '../components/TopBar';
 import { MaterialIcons, FontAwesome5 } from '@expo/vector-icons';
 import StoreCard from '../components/StoreCard';
 import { filterOptions } from '../src/data/filterOptions';
-import { useNavigation } from '@react-navigation/native'; // Import useNavigation
+import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function HomePage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedFilter, setSelectedFilter] = useState('All');
   const [filteredData, setFilteredData] = useState([]);
-  const [expandedItems, setExpandedItems] = useState({});
   const [favorites, setFavorites] = useState({});
   const [loading, setLoading] = useState(true); // Loading state
   const theme = useTheme();
@@ -70,11 +69,7 @@ export default function HomePage() {
   };
 
   const filterData = (query, filter) => {
-    let newData = filteredData;
-
-    if (filter !== 'All') {
-      newData = filteredData.filter((item) => item.categories.includes(filter));
-    }
+    let newData = filter === 'All' ? filteredData : filteredData.filter((item) => item.categories.includes(filter));
 
     if (query) {
       newData = newData.filter((item) =>
@@ -115,7 +110,7 @@ export default function HomePage() {
             isSelected && { backgroundColor: theme.colors.primary },
           ]}
         >
-          <Image source={item.icon} style={styles.filterIcon} />
+          <Image source={item.icon} style={styles.filterIcon} /> {/* Ensure Image is used correctly */}
         </View>
         <Text
           style={[
@@ -130,20 +125,7 @@ export default function HomePage() {
   };
 
   const renderStoreCard = ({ item }) => {
-    const isExpanded = expandedItems[item.id];
     const isFavorite = favorites[item.id];
-
-    const handleToggleExpand = () => {
-      setExpandedItems((prev) => ({
-        ...prev,
-        [item.id]: !prev[item.id],
-      }));
-    };
-
-    const handleCategoryPress = (category) => {
-      setSelectedFilter(category);
-      filterData(searchQuery, category);
-    };
 
     // Handler to navigate to StorePage
     const handleVisitStore = () => {
@@ -153,8 +135,6 @@ export default function HomePage() {
     return (
       <StoreCard
         item={item}
-        isExpanded={isExpanded}
-        toggleExpand={handleToggleExpand}
         isFavorite={isFavorite}
         toggleFavorite={() => toggleFavorite(item.id)}
         getCategoryIcon={getCategoryIcon}
@@ -164,14 +144,17 @@ export default function HomePage() {
     );
   };
 
+  const handleCategoryPress = (category) => {
+    setSelectedFilter(category);
+    filterData(searchQuery, category);
+  };
+
   const getCategoryIcon = (category) => {
     switch (category) {
       case 'CBD':
         return <FontAwesome5 name="leaf" size={12} color="#4CAF50" />;
       case 'THC':
-        return (
-          <MaterialIcons name="local-florist" size={12} color="#F44336" />
-        );
+        return <MaterialIcons name="local-florist" size={12} color="#F44336" />;
       case 'Clubs':
         return <MaterialIcons name="group" size={12} color="#FF9800" />;
       case 'Oils':
@@ -181,9 +164,7 @@ export default function HomePage() {
       case 'Flower':
         return <FontAwesome5 name="spa" size={12} color="#8BC34A" />;
       case 'Delivery':
-        return (
-          <MaterialIcons name="delivery-dining" size={12} color="#03A9F4" />
-        );
+        return <MaterialIcons name="delivery-dining" size={12} color="#03A9F4" />;
       default:
         return null;
     }
@@ -248,6 +229,7 @@ export default function HomePage() {
           keyExtractor={(item) => item.id.toString()} // Ensure key is a string
           contentContainerStyle={styles.listContent}
           ItemSeparatorComponent={() => <View style={{ height: 16 }} />}
+          showsVerticalScrollIndicator={false}
         />
       </View>
     </SafeAreaView>

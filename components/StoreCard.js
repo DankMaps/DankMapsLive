@@ -4,88 +4,37 @@ import React from 'react';
 import {
   View,
   StyleSheet,
-  Image,
+  Image, // Ensure Image is imported
   TouchableOpacity,
-  Share,
-  Alert,
-  Platform,
-  Linking, // Added import for Linking
 } from 'react-native';
 import {
   Card,
   Title,
-  Paragraph,
   Chip,
   useTheme,
   IconButton,
+  Button,
 } from 'react-native-paper';
 import { MaterialIcons, FontAwesome5 } from '@expo/vector-icons';
 
 const StoreCard = ({
   item,
-  isExpanded,
-  toggleExpand,
   isFavorite,
   toggleFavorite,
   getCategoryIcon,
   onCategoryPress,
-  onVisitStore, // New prop for navigation
+  onVisitStore, // Prop for navigation
 }) => {
   const theme = useTheme();
-
-  // Handler for Directions button
-  const handleDirections = () => {
-    // Ensure item has latitude and longitude
-    const latitude = item.latitude;
-    const longitude = item.longitude;
-
-    if (latitude && longitude) {
-      const url = Platform.select({
-        ios: `maps:0,0?q=${latitude},${longitude}(${item.title})`,
-        android: `geo:0,0?q=${latitude},${longitude}(${item.title})`,
-      });
-
-      Linking.openURL(url).catch(() =>
-        Alert.alert('Error', 'Unable to open map for directions.')
-      );
-    } else {
-      Alert.alert('Error', 'Location information is not available.');
-    }
-  };
-
-  // Handler for Share button
-  const handleShare = async () => {
-    try {
-      const result = await Share.share({
-        message: `Check out ${item.title}! ${item.description}`,
-        url: item.website || '', // Assuming you have a website field
-        title: item.title,
-      });
-
-      if (result.action === Share.sharedAction) {
-        if (result.activityType) {
-          // Shared with activity type of result.activityType
-        } else {
-          // Shared
-        }
-      } else if (result.action === Share.dismissedAction) {
-        // Dismissed
-      }
-    } catch (error) {
-      Alert.alert('Error', 'Failed to share the store details.');
-    }
-  };
 
   return (
     <Card
       style={[styles.card, { backgroundColor: theme.colors.surface }]}
-      onPress={toggleExpand}
       elevation={4}
     >
       <View style={styles.cardContent}>
         {/* Logo Container for Modern Look */}
         <View style={styles.logoContainer}>
-          {/* Update the Image source to use { uri: item.logo } */}
           {item.logo ? (
             <Image
               source={{ uri: item.logo }}
@@ -107,11 +56,6 @@ const StoreCard = ({
 
         <View style={styles.cardText}>
           <Title style={{ color: theme.colors.onSurface }}>{item.title}</Title>
-          {isExpanded && (
-            <Paragraph style={{ color: theme.colors.onSurfaceVariant }}>
-              {item.description}
-            </Paragraph>
-          )}
           <View style={styles.chipContainer}>
             {item.categories.map((category) => (
               <Chip
@@ -125,11 +69,32 @@ const StoreCard = ({
               </Chip>
             ))}
           </View>
+
+          {/* Visit Store Button */}
+          <Button
+            mode="contained"
+            onPress={onVisitStore}
+            style={styles.visitButton}
+            contentStyle={styles.visitButtonContent}
+            labelStyle={styles.visitButtonLabel}
+            icon={() => (
+              <MaterialIcons
+                name="store"
+                size={20}
+                color="#fff"
+                style={{ marginRight: 5 }}
+              />
+            )}
+            accessibilityLabel="Visit Store"
+          >
+            Visit Store
+          </Button>
         </View>
+
         <View style={styles.actionIcons}>
           <IconButton
             icon={isFavorite ? 'heart' : 'heart-outline'}
-            color={isFavorite ? theme.colors.error : theme.colors.secondary}
+            color={isFavorite ? theme.colors.error : theme.colors.onSurface}
             size={20}
             onPress={toggleFavorite}
             accessibilityLabel="Favorite"
@@ -137,52 +102,8 @@ const StoreCard = ({
         </View>
       </View>
 
-      {/* Action Buttons */}
-      {isExpanded && (
-        <View style={styles.actionButtonsContainer}>
-          {/* Directions Button */}
-          <TouchableOpacity
-            style={styles.actionButton}
-            onPress={handleDirections}
-            accessibilityLabel="Directions"
-          >
-            <MaterialIcons
-              name="directions"
-              size={24}
-              color={theme.colors.primary}
-            />
-            <Title style={styles.actionLabel}>Directions</Title>
-          </TouchableOpacity>
-
-          {/* Share Button */}
-          <TouchableOpacity
-            style={styles.actionButton}
-            onPress={handleShare}
-            accessibilityLabel="Share"
-          >
-            <MaterialIcons
-              name="share"
-              size={24}
-              color={theme.colors.primary}
-            />
-            <Title style={styles.actionLabel}>Share</Title>
-          </TouchableOpacity>
-
-          {/* Visit Store Button */}
-          <TouchableOpacity
-            style={styles.actionButton}
-            onPress={onVisitStore} // Invoke the navigation handler
-            accessibilityLabel="Visit Store"
-          >
-            <MaterialIcons
-              name="store"
-              size={24}
-              color={theme.colors.primary}
-            />
-            <Title style={styles.actionLabel}>Visit Store</Title>
-          </TouchableOpacity>
-        </View>
-      )}
+      {/* Removed Share Button */}
+      {/* If you have any additional layout adjustments, make them here */}
     </Card>
   );
 };
@@ -241,27 +162,25 @@ const styles = StyleSheet.create({
     marginTop: 4,
     backgroundColor: '#e0e0e0',
   },
+  visitButton: {
+    marginTop: 12,
+    borderRadius: 20,
+    backgroundColor: '#2e7d32',
+  },
+  visitButtonContent: {
+    height: 40,
+  },
+  visitButtonLabel: {
+    fontSize: 14,
+    color: '#fff',
+  },
   actionIcons: {
     flexDirection: 'row',
     position: 'absolute',
     top: 10,
     right: 10,
   },
-  actionButtonsContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    paddingVertical: 10,
-    borderTopWidth: 1,
-    borderColor: '#e0e0e0',
-  },
-  actionButton: {
-    alignItems: 'center',
-  },
-  actionLabel: {
-    fontSize: 12,
-    marginTop: 4,
-    color: '#555',
-  },
+  // Removed shareButtonContainer and related styles
 });
 
 export default StoreCard;

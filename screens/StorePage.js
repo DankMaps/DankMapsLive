@@ -18,6 +18,7 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 import axios from 'axios';
 import { MaterialIcons, FontAwesome5 } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Appbar, Chip, Button, useTheme } from 'react-native-paper';
 
 export default function StorePage() {
   const navigation = useNavigation();
@@ -27,6 +28,7 @@ export default function StorePage() {
   const [store, setStore] = useState(null);
   const [loading, setLoading] = useState(true);
   const [favorite, setFavorite] = useState(false);
+  const theme = useTheme();
 
   // Fetch store data when the component mounts
   useEffect(() => {
@@ -187,93 +189,120 @@ export default function StorePage() {
   }
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      {/* Store Image */}
-      <Image
-        source={
-          store.logo
-            ? { uri: store.logo }
-            : require('../assets/default-logo.png') // Provide a default image
-        }
-        style={styles.storeImage}
-        resizeMode="cover"
-        accessible={true}
-        accessibilityLabel={`${store.title} Logo`}
-      />
+    <View style={styles.container}>
+      {/* Header */}
+      <Appbar.Header style={styles.header}>
+        <Appbar.BackAction onPress={handleGoBack} />
+        <Appbar.Content title={store.title} />
+        <Appbar.Action
+          icon={favorite ? 'heart' : 'heart-outline'}
+          color={favorite ? theme.colors.error : theme.colors.onSurface}
+          onPress={handleFavorite}
+          accessibilityLabel="Favorite"
+        />
+      </Appbar.Header>
 
-      {/* Store Details */}
-      <View style={styles.detailsContainer}>
-        <Text style={styles.storeName}>{store.title}</Text>
-        <Text style={styles.storeDescription}>{store.description}</Text>
+      <ScrollView contentContainerStyle={styles.contentContainer}>
+        {/* Store Image */}
+        <Image
+          source={
+            store.logo
+              ? { uri: store.logo }
+              : require('../assets/default-logo.png') // Provide a default image
+          }
+          style={styles.storeImage}
+          resizeMode="cover"
+          accessible={true}
+          accessibilityLabel={`${store.title} Logo`}
+        />
 
-        {/* Categories */}
-        <View style={styles.categoriesContainer}>
-          {store.categories && store.categories.map((category, index) => (
-            <View key={index} style={styles.categoryItem}>
-              {getCategoryIcon(category)}
-              <Text style={styles.categoryText}>{category}</Text>
-            </View>
-          ))}
+        {/* Store Description */}
+        <View style={styles.detailsContainer}>
+          <Text style={styles.storeDescription}>{store.description}</Text>
+
+          {/* Categories */}
+          <View style={styles.categoriesContainer}>
+            {store.categories &&
+              store.categories.map((category, index) => (
+                <Chip
+                  key={index}
+                  icon={() => getCategoryIcon(category)}
+                  onPress={() => Alert.alert('Category Pressed', category)}
+                  style={styles.chip}
+                >
+                  {category}
+                </Chip>
+              ))}
+          </View>
+
+          {/* Website */}
+          {store.website ? (
+            <TouchableOpacity onPress={handleContact} style={styles.websiteContainer}>
+              <MaterialIcons name="web" size={20} color="#1e88e5" />
+              <Text style={styles.websiteText}>{store.website}</Text>
+            </TouchableOpacity>
+          ) : null}
         </View>
 
-        {/* Website */}
-        {store.website ? (
-          <TouchableOpacity onPress={handleContact} accessibilityLabel="Visit Website">
-            <Text style={styles.websiteText}>Website: {store.website}</Text>
-          </TouchableOpacity>
-        ) : null}
-      </View>
+        {/* Action Buttons */}
+        <View style={styles.actionButtonsContainer}>
+          <Button
+            icon="phone"
+            mode="contained"
+            onPress={handleContact}
+            style={styles.actionButton}
+            labelStyle={styles.actionButtonLabel}
+            contentStyle={styles.actionButtonContent}
+            accessibilityLabel="Contact"
+          >
+            Contact
+          </Button>
 
-      {/* Action Buttons */}
-      <View style={styles.actionButtonsContainer}>
-        {/* Contact Button */}
-        <TouchableOpacity style={styles.actionButton} onPress={handleContact} accessibilityLabel="Contact">
-          <MaterialIcons name="contact-mail" size={24} color="#fff" />
-          <Text style={styles.actionLabel}>Contact</Text>
-        </TouchableOpacity>
+          <Button
+            icon="map-marker"
+            mode="contained"
+            onPress={handleDirections}
+            style={styles.actionButton}
+            labelStyle={styles.actionButtonLabel}
+            contentStyle={styles.actionButtonContent}
+            accessibilityLabel="Directions"
+          >
+            Directions
+          </Button>
 
-        {/* Directions Button */}
-        <TouchableOpacity style={styles.actionButton} onPress={handleDirections} accessibilityLabel="Directions">
-          <MaterialIcons name="directions" size={24} color="#fff" />
-          <Text style={styles.actionLabel}>Directions</Text>
-        </TouchableOpacity>
-
-        {/* Share Button */}
-        <TouchableOpacity style={styles.actionButton} onPress={handleShare} accessibilityLabel="Share">
-          <MaterialIcons name="share" size={24} color="#fff" />
-          <Text style={styles.actionLabel}>Share</Text>
-        </TouchableOpacity>
-
-        {/* Favorite Button */}
-        <TouchableOpacity style={styles.actionButton} onPress={handleFavorite} accessibilityLabel="Favorite">
-          <MaterialIcons
-            name={favorite ? "favorite" : "favorite-border"}
-            size={24}
-            color="#fff"
-          />
-          <Text style={styles.actionLabel}>{favorite ? 'Unfavorite' : 'Favorite'}</Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* Go Back Button */}
-      <TouchableOpacity onPress={handleGoBack} style={styles.goBackButton} accessibilityLabel="Go Back">
-        <MaterialIcons name="arrow-back" size={24} color="#2e7d32" />
-        <Text style={styles.goBackText}>Go Back</Text>
-      </TouchableOpacity>
-    </ScrollView>
+          <Button
+            icon="share-variant"
+            mode="contained"
+            onPress={handleShare}
+            style={styles.actionButton}
+            labelStyle={styles.actionButtonLabel}
+            contentStyle={styles.actionButtonContent}
+            accessibilityLabel="Share"
+          >
+            Share
+          </Button>
+        </View>
+      </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    padding: 20,
-    alignItems: 'center',
+    flex: 1,
     backgroundColor: '#fff',
+  },
+  header: {
+    backgroundColor: '#2e7d32',
+  },
+  contentContainer: {
+    padding: 16,
+    alignItems: 'center',
   },
   storeImage: {
     width: '100%',
     height: 200,
-    borderRadius: 10,
+    borderRadius: 12,
     marginBottom: 20,
     backgroundColor: '#e0e0e0', // Placeholder background color
   },
@@ -281,61 +310,50 @@ const styles = StyleSheet.create({
     width: '100%',
     marginBottom: 20,
   },
-  storeName: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#2e7d32',
-    marginBottom: 10,
-  },
   storeDescription: {
     fontSize: 16,
     color: '#555',
     marginBottom: 10,
+    textAlign: 'justify',
   },
   categoriesContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     marginBottom: 10,
   },
-  categoryItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#f0f0f0',
-    borderRadius: 15,
-    paddingVertical: 5,
-    paddingHorizontal: 10,
+  chip: {
     marginRight: 8,
     marginBottom: 8,
+    backgroundColor: '#e0e0e0',
   },
-  categoryText: {
-    fontSize: 12,
-    color: '#555',
-    marginLeft: 5,
+  websiteContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 10,
   },
   websiteText: {
     fontSize: 16,
     color: '#1e88e5',
     textDecorationLine: 'underline',
+    marginLeft: 5,
   },
   actionButtonsContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-around',
+    justifyContent: 'space-between',
     width: '100%',
-    marginBottom: 20,
   },
   actionButton: {
-    backgroundColor: '#2e7d32',
-    paddingVertical: 10,
-    paddingHorizontal: 15,
-    borderRadius: 10,
-    alignItems: 'center',
     flex: 1,
     marginHorizontal: 5,
+    backgroundColor: '#2e7d32',
   },
-  actionLabel: {
-    color: '#fff',
-    marginTop: 5,
+  actionButtonLabel: {
     fontSize: 14,
+    color: '#fff',
+  },
+  actionButtonContent: {
+    flexDirection: 'row-reverse',
+    paddingVertical: 8,
   },
   loadingContainer: {
     flex: 1,
@@ -364,16 +382,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   backButtonText: {
-    marginLeft: 5,
-    fontSize: 16,
-    color: '#2e7d32',
-  },
-  goBackButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 10,
-  },
-  goBackText: {
     marginLeft: 5,
     fontSize: 16,
     color: '#2e7d32',
