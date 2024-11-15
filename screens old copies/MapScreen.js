@@ -17,44 +17,20 @@ import {
   FlatList,
   ActivityIndicator,
   Alert,
-  Switch,
 } from 'react-native';
 import MapView, { Marker } from 'react-native-maps';
 import * as Location from 'expo-location';
 import { useNavigation } from '@react-navigation/native';
 import io from 'socket.io-client';
 import { Card } from 'react-native-paper';
-import axios from 'axios';
+import axios from 'axios'; // Import axios
 import { Modalize } from 'react-native-modalize';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { MaterialIcons, FontAwesome5 } from '@expo/vector-icons';
-import Modal from 'react-native-modal'; // Import react-native-modal
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 const COLLAPSED_HEIGHT = SCREEN_HEIGHT * 0.4;
 const EXPANDED_HEIGHT = SCREEN_HEIGHT * 0.8;
-
-// Define map regions for each province
-const PROVINCE_REGIONS = {
-  Gauteng: {
-    latitude: -25.746111,
-    longitude: 28.188056,
-    latitudeDelta: 1.0,
-    longitudeDelta: 1.0,
-  },
-  'KwaZulu-Natal': {
-    latitude: -29.858680,
-    longitude: 31.021840,
-    latitudeDelta: 1.5,
-    longitudeDelta: 1.5,
-  },
-  'Cape Town': {
-    latitude: -33.924870,
-    longitude: 18.424055,
-    latitudeDelta: 0.5,
-    longitudeDelta: 0.5,
-  },
-};
 
 export default function MapScreen() {
   // State Management
@@ -63,11 +39,8 @@ export default function MapScreen() {
   const [selectedStore, setSelectedStore] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
-  const [storeData, setStoreData] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [useMarijuanaIcon, setUseMarijuanaIcon] = useState(false);
-  const [selectedProvince, setSelectedProvince] = useState('Gauteng'); // Default province
-  const [isModalVisible, setIsModalVisible] = useState(false); // Modal visibility
+  const [storeData, setStoreData] = useState([]); // Add storeData state
+  const [loading, setLoading] = useState(true); // Loading state
 
   // Refs
   const socket = useRef(null);
@@ -77,9 +50,6 @@ export default function MapScreen() {
 
   // Replace with your API endpoint
   const API_URL = 'http://darksamarai.ddns.net:3000/api/clients'; // Update this to your actual IP or Ngrok URL
-
-  // Province list
-  const provinces = ['Gauteng', 'KwaZulu-Natal', 'Cape Town'];
 
   // Helper function to calculate region that fits given coordinates
   const getRegionForCoordinates = (points) => {
@@ -171,11 +141,22 @@ export default function MapScreen() {
     fetchStoreData();
   }, [API_URL]);
 
-  // Calculate Initial Map Region based on selected province
+  // Calculate Initial Map Region
   useEffect(() => {
-    const region = PROVINCE_REGIONS[selectedProvince];
-    setMapRegion(region);
-  }, [selectedProvince, storeData, location]);
+    if (storeData && storeData.length > 0 && location) {
+      const markers = storeData.slice(0, 4).map(store => ({
+        latitude: store.latitude,
+        longitude: store.longitude,
+      }));
+      // Include user's location
+      markers.push({
+        latitude: location.latitude,
+        longitude: location.longitude,
+      });
+      const region = getRegionForCoordinates(markers);
+      setMapRegion(region);
+    }
+  }, [storeData, location]);
 
   // Hide Navigation Header
   useEffect(() => {
@@ -375,17 +356,6 @@ export default function MapScreen() {
     navigation.navigate('Home'); // Adjust the route name if needed
   };
 
-  // Function to toggle modal visibility
-  const toggleModal = () => {
-    setIsModalVisible(!isModalVisible);
-  };
-
-  // Function to handle province selection
-  const handleProvinceSelect = (province) => {
-    setSelectedProvince(province);
-    toggleModal();
-  };
-
   if (loading) {
     // Display a loading indicator while fetching data
     return (
@@ -411,7 +381,7 @@ export default function MapScreen() {
           />
 
           {/* Home Icon */}
-          <TouchableOpacity onPress={navigateToHome} style={styles.homeButton} accessibilityLabel="Go to Home">
+          <TouchableOpacity onPress={navigateToHome} style={styles.homeButton}>
             <MaterialIcons name="home" size={28} color="#000" />
           </TouchableOpacity>
         </View>
@@ -423,7 +393,6 @@ export default function MapScreen() {
             value={searchQuery}
             onChangeText={handleSearchInputChange}
             style={styles.searchInput}
-            accessibilityLabel="Search for stores"
           />
           {/* Display search results */}
           {searchResults.length > 0 && (
@@ -435,7 +404,6 @@ export default function MapScreen() {
                   <TouchableOpacity
                     style={styles.searchResultItem}
                     onPress={() => handleSearchResultPress(item)}
-                    accessibilityLabel={`Select ${item.title}`}
                   >
                     <Text style={styles.searchResultText}>{item.title}</Text>
                   </TouchableOpacity>
@@ -444,40 +412,6 @@ export default function MapScreen() {
             </View>
           )}
         </View>
-
-        {/* Province Selector Button */}
-        <TouchableOpacity style={styles.customPickerButton} onPress={toggleModal} accessibilityLabel="Open Province Selector">
-          <Text style={styles.customPickerButtonText}>{selectedProvince}</Text>
-          <MaterialIcons name="arrow-drop-down" size={24} color="#2e7d32" />
-        </TouchableOpacity>
-
-        {/* Custom Modal for Province Selection */}
-        <Modal 
-          isVisible={isModalVisible}
-          onBackdropPress={toggleModal}
-          onBackButtonPress={toggleModal}
-          style={styles.modalWrapper}
-        >
-          <View style={styles.modalContainer}>
-            <Text style={styles.modalTitle}>Select Province</Text>
-            <FlatList
-              data={provinces}
-              keyExtractor={(item) => item}
-              renderItem={({ item }) => (
-                <TouchableOpacity 
-                  style={styles.modalItem} 
-                  onPress={() => handleProvinceSelect(item)}
-                  accessibilityLabel={`Select ${item}`}
-                >
-                  <Text style={styles.modalItemText}>{item}</Text>
-                </TouchableOpacity>
-              )}
-            />
-            <TouchableOpacity style={styles.modalCloseButton} onPress={toggleModal} accessibilityLabel="Close Province Selector">
-              <Text style={styles.modalCloseButtonText}>Cancel</Text>
-            </TouchableOpacity>
-          </View>
-        </Modal>
 
         {/* Map View with Markers */}
         <MapView
@@ -501,36 +435,20 @@ export default function MapScreen() {
               anchor={{ x: 0.5, y: 1 }}
               calloutEnabled={false}
             >
-              {/* Conditional Marker Icon */}
+              {/* Store Logo as Marker */}
               <Image
                 source={
-                  useMarijuanaIcon
-                    ? require('../assets/marijuana.png') // Custom marijuana icon
-                    : (store.logo
-                        ? (typeof store.logo === 'string' ? { uri: store.logo } : store.logo)
-                        : require('../assets/default-logo.png') // Provide a default image
-                      )
+                  store.logo
+                    ? (typeof store.logo === 'string' ? { uri: store.logo } : store.logo)
+                    : require('../assets/default-logo.png') // Provide a default image
                 }
                 style={styles.markerImage}
-                accessibilityLabel={`${store.title} Marker`}
               />
             </Marker>
           ))}
         </MapView>
 
-        {/* Toggle Switch at Bottom Left */}
-        <View style={styles.toggleContainer}>
-          <Switch
-            value={useMarijuanaIcon}
-            onValueChange={(value) => setUseMarijuanaIcon(value)}
-            thumbColor={useMarijuanaIcon ? '#2e7d32' : '#f4f3f4'}
-            trackColor={{ false: '#767577', true: '#81b0ff' }}
-            ios_backgroundColor="#3e3e3e"
-            accessibilityLabel="Toggle Marker Icons"
-          />
-        </View>
-
-        {/* Sync to My Location Button at Bottom Right */}
+        {/* Sync to My Location Button */}
         <TouchableOpacity
           style={styles.syncButton}
           onPress={centerOnUserLocation}
@@ -669,9 +587,9 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
   },
   markerImage: {
-    width: 40, // Reduced size for a more modern look
-    height: 40, // Reduced size for a more modern look
-    borderRadius: 20,
+    width: 50,
+    height: 50,
+    borderRadius: 25,
     resizeMode: 'cover',
     borderWidth: 2,
     borderColor: '#fff',
@@ -735,84 +653,9 @@ const styles = StyleSheet.create({
   searchResultText: {
     fontSize: 16,
   },
-  customPickerButton: {
-    position: 'absolute',
-    top: Platform.OS === 'ios' ? 160 : StatusBar.currentHeight + 130, // Positioned below search bar
-    left: 20,
-    right: 20,
-    zIndex: 2,
-    backgroundColor: '#fff',
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#ccc',
-    paddingVertical: 10,
-    paddingHorizontal: 15,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    elevation: 3, // For Android shadow
-    shadowColor: '#000', // For iOS shadow
-    shadowOffset: { width: 0, height: 2 }, // For iOS shadow
-    shadowOpacity: 0.2, // For iOS shadow
-    shadowRadius: 2, // For iOS shadow
-  },
-  customPickerButtonText: {
-    fontSize: 16,
-    color: '#333',
-  },
-  modalWrapper: {
-    justifyContent: 'flex-end',
-    margin: 0,
-  },
-  modalContainer: {
-    backgroundColor: 'white',
-    borderRadius: 10,
-    padding: 20,
-    alignItems: 'center',
-    maxHeight: '80%',
-  },
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 20,
-  },
-  modalItem: {
-    paddingVertical: 10,
-    width: '100%',
-    alignItems: 'center',
-  },
-  modalItemText: {
-    fontSize: 16,
-    color: '#333',
-  },
-  modalCloseButton: {
-    marginTop: 20,
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    backgroundColor: '#2e7d32',
-    borderRadius: 5,
-  },
-  modalCloseButtonText: {
-    color: '#fff',
-    fontSize: 16,
-  },
-  toggleContainer: {
-    position: 'absolute',
-    bottom: 30, // Adjusted for spacing from bottom
-    left: 20,
-    backgroundColor: 'transparent', // Removed white background
-    padding: 0, // Removed padding
-    borderRadius: 20,
-    // Optional: Add shadow for better visibility against the map
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.3,
-    shadowRadius: 1,
-    elevation: 2, // For Android shadow
-  },
   syncButton: {
     position: 'absolute',
-    bottom: 30, // Adjusted for spacing from bottom
+    bottom: Platform.OS === 'ios' ? 30 : 60,
     right: 20,
     backgroundColor: '#fff',
     padding: 10,
@@ -950,42 +793,6 @@ const styles = StyleSheet.create({
   },
   modal: {
     backgroundColor: 'transparent',
-  },
-  modalWrapper: {
-    justifyContent: 'flex-end',
-    margin: 0,
-  },
-  modalContainer: {
-    backgroundColor: 'white',
-    borderRadius: 10,
-    padding: 20,
-    alignItems: 'center',
-    maxHeight: '80%',
-  },
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 20,
-  },
-  modalItem: {
-    paddingVertical: 10,
-    width: '100%',
-    alignItems: 'center',
-  },
-  modalItemText: {
-    fontSize: 16,
-    color: '#333',
-  },
-  modalCloseButton: {
-    marginTop: 20,
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    backgroundColor: '#2e7d32',
-    borderRadius: 5,
-  },
-  modalCloseButtonText: {
-    color: '#fff',
-    fontSize: 16,
   },
   loadingContainer: {
     flex: 1,
