@@ -1,38 +1,25 @@
 // src/screens/MapScreen.js
 
 import React, { useState, useEffect, useRef } from 'react';
-import {
-  View,
-  StyleSheet,
-  Platform,
-  Linking,
-  Share,
-  ActivityIndicator,
-  Alert,
-  Text,
-} from 'react-native';
+import { View, StyleSheet, Dimensions, Platform, Linking, Share, FlatList, ActivityIndicator, Alert, Text } from 'react-native';
+import MapView from 'react-native-maps';
 import * as Location from 'expo-location';
 import { useNavigation } from '@react-navigation/native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { MaterialIcons } from '@expo/vector-icons';
 
 import Header from '../components/Header';
 import SearchBar from '../components/SearchBar';
 import ProvinceSelector from '../components/ProvinceSelector';
-import CustomMap from '../components/CustomMap';
+import MapMarkers from '../components/MapMarkers';
 import ToggleSwitch from '../components/ToggleSwitch';
 import SyncButton from '../components/SyncButton';
 import StoreModal from '../components/StoreModal';
 
-import {
-  PROVINCE_REGIONS,
-  PROVINCES,
-  COLLAPSED_HEIGHT,
-  EXPANDED_HEIGHT,
-} from '../utils/constants';
+import { PROVINCE_REGIONS, PROVINCES, COLLAPSED_HEIGHT, EXPANDED_HEIGHT } from '../utils/constants';
 import { getRegionForCoordinates } from '../utils/helpers';
 import { fetchStoreData } from '../services/api';
 import { createSocketConnection } from '../services/socket';
+import { FontAwesome5, MaterialIcons } from '@expo/vector-icons';
 
 export default function MapScreen() {
   // State Management
@@ -45,15 +32,13 @@ export default function MapScreen() {
   const [loading, setLoading] = useState(true);
   const [useMarijuanaIcon, setUseMarijuanaIcon] = useState(false);
   const [selectedProvince, setSelectedProvince] = useState('Gauteng'); // Default province
-  const [isProvinceModalVisible, setIsProvinceModalVisible] = useState(false); // Province selector modal visibility
+  const [isModalVisible, setIsModalVisible] = useState(false); // Province selector modal visibility
 
   // Refs
   const socket = useRef(null);
+  const mapRef = useRef(null);
   const navigation = useNavigation();
   const modalizeRef = useRef(null);
-
-  // Ref for CustomMap
-  const customMapRef = useRef(null);
 
   // WebSocket Connection
   useEffect(() => {
@@ -61,11 +46,7 @@ export default function MapScreen() {
 
     socket.current.on('storeDetailsUpdated', (data) => {
       // Update the specific store in storeData
-      setStoreData((prevStoreData) =>
-        prevStoreData.map((store) =>
-          store.id === data.id ? { ...store, ...data } : store
-        )
-      );
+      setStoreData(prevStoreData => prevStoreData.map(store => store.id === data.id ? data : store));
     });
 
     return () => {
@@ -80,10 +61,7 @@ export default function MapScreen() {
     (async () => {
       let { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== 'granted') {
-        Alert.alert(
-          'Permission Denied',
-          'Permission to access location was denied'
-        );
+        Alert.alert('Permission Denied', 'Permission to access location was denied');
         return;
       }
 
@@ -108,10 +86,7 @@ export default function MapScreen() {
         } else if (error.request) {
           // Request was made but no response received
           console.error('No response received:', error.request);
-          Alert.alert(
-            'Error',
-            'No response from server. Please check your network connection.'
-          );
+          Alert.alert('Error', 'No response from server. Please check your network connection.');
         } else {
           // Something else happened
           console.error('Error:', error.message);
@@ -137,22 +112,36 @@ export default function MapScreen() {
     });
   }, [navigation]);
 
-  // Function to center map on user location using CustomMap's exposed method
-  const centerMapOnUserLocation = () => {
-    if (location && customMapRef.current) {
-      customMapRef.current.animateToRegion(
-        {
-          latitude: location.latitude,
-          longitude: location.longitude,
-          latitudeDelta: 0.01,
-          longitudeDelta: 0.01,
-        },
-        1000
-      );
+  // Center Map on User Location
+  const centerOnUserLocation = async () => {
+    if (mapRef.current && location) {
+      mapRef.current.animateToRegion({
+        latitude: location.latitude,
+        longitude: location.longitude,
+        latitudeDelta: 0.01,
+        longitudeDelta: 0.01,
+      }, 1000);
+    } else {
+      // If location is not available, fetch it
+      let { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permission Denied', 'Permission to access location was denied');
+        return;
+      }
+
+      let userLocation = await Location.getCurrentPositionAsync({});
+      setLocation(userLocation.coords);
+
+      mapRef.current.animateToRegion({
+        latitude: userLocation.coords.latitude,
+        longitude: userLocation.coords.longitude,
+        latitudeDelta: 0.01,
+        longitudeDelta: 0.01,
+      }, 1000);
     }
   };
 
-  // Function to center map on selected store
+  // Center Map on Selected Store
   const centerMapOnStore = (latitude, longitude) => {
     const latitudeDelta = mapRegion ? mapRegion.latitudeDelta : 0.01;
     const longitudeDelta = mapRegion ? mapRegion.longitudeDelta : 0.01;
@@ -161,17 +150,15 @@ export default function MapScreen() {
     const offsetFactor = -0.25;
     const newLatitude = latitude + latitudeDelta * offsetFactor;
 
-    if (customMapRef.current) {
-      customMapRef.current.animateToRegion(
-        {
-          latitude: newLatitude,
-          longitude: longitude,
-          latitudeDelta,
-          longitudeDelta,
-        },
-        500
-      );
-    }
+    mapRef.current.animateToRegion(
+      {
+        latitude: newLatitude,
+        longitude: longitude,
+        latitudeDelta,
+        longitudeDelta,
+      },
+      500
+    );
   };
 
   // Handle Marker Press
@@ -191,9 +178,7 @@ export default function MapScreen() {
   const handleContact = () => {
     console.log('Contact button pressed');
     const whatsappGroupLink = 'https://chat.whatsapp.com/your-group-link'; // Replace with actual link
-    Linking.openURL(whatsappGroupLink).catch((err) =>
-      console.error('Error:', err)
-    );
+    Linking.openURL(whatsappGroupLink).catch(err => console.error('Error:', err));
   };
 
   const handleDirections = () => {
@@ -204,7 +189,7 @@ export default function MapScreen() {
       ios: `maps:0,0?q=${latitude},${longitude}`,
       android: `geo:0,0?q=${latitude},${longitude}`,
     });
-    Linking.openURL(url).catch((err) => console.error('Error:', err));
+    Linking.openURL(url).catch(err => console.error('Error:', err));
   };
 
   const handleShare = async () => {
@@ -247,7 +232,9 @@ export default function MapScreen() {
       case 'CBD':
         return <FontAwesome5 name="leaf" size={16} color="#4CAF50" />;
       case 'THC':
-        return <MaterialIcons name="local-florist" size={16} color="#F44336" />;
+        return (
+          <MaterialIcons name="local-florist" size={16} color="#F44336" />
+        );
       case 'Clubs':
         return <MaterialIcons name="group" size={16} color="#FF9800" />;
       case 'Oils':
@@ -279,7 +266,7 @@ export default function MapScreen() {
       setSearchResults([]);
     } else {
       // Filter storeData based on the search query
-      const results = storeData.filter((store) =>
+      const results = storeData.filter(store =>
         store.title.toLowerCase().includes(text.toLowerCase())
       );
       setSearchResults(results);
@@ -296,7 +283,7 @@ export default function MapScreen() {
 
   // Function to toggle province modal visibility
   const toggleProvinceModal = () => {
-    setIsProvinceModalVisible(!isProvinceModalVisible);
+    setIsModalVisible(!isModalVisible);
   };
 
   // Function to handle province selection
@@ -330,27 +317,34 @@ export default function MapScreen() {
         <ProvinceSelector
           selectedProvince={selectedProvince}
           provinces={PROVINCES}
-          isVisible={isProvinceModalVisible}
+          isVisible={isModalVisible}
           toggleModal={toggleProvinceModal}
           onSelectProvince={handleProvinceSelect}
         />
 
-        <CustomMap
-          ref={customMapRef}
-          mapRegion={mapRegion}
-          setMapRegion={setMapRegion}
-          storeData={storeData}
-          useMarijuanaIcon={useMarijuanaIcon}
-          onMarkerPress={handleMarkerPress}
-          userLocation={location}
-        />
+        <MapView
+          ref={mapRef}
+          style={styles.map}
+          region={mapRegion}
+          showsUserLocation={true}
+          onRegionChangeComplete={setMapRegion}
+        >
+          <MapMarkers
+            storeData={storeData}
+            useMarijuanaIcon={useMarijuanaIcon}
+            onMarkerPress={(store) => {
+              centerMapOnStore(store.latitude, store.longitude);
+              handleMarkerPress(store);
+            }}
+          />
+        </MapView>
 
         <ToggleSwitch
           value={useMarijuanaIcon}
           onValueChange={setUseMarijuanaIcon}
         />
 
-        <SyncButton onPress={centerMapOnUserLocation} />
+        <SyncButton onPress={centerOnUserLocation} />
 
         <StoreModal
           modalizeRef={modalizeRef}
@@ -373,6 +367,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     // Removed paddingTop as Modalize handles overlapping
+  },
+  map: {
+    ...StyleSheet.absoluteFillObject,
   },
   loadingContainer: {
     flex: 1,
