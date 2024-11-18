@@ -18,26 +18,23 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 import axios from 'axios';
 import { MaterialIcons, FontAwesome5 } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Chip, IconButton, useTheme } from 'react-native-paper';
+import { Chip } from 'react-native-paper';
 import * as SplashScreen from 'expo-splash-screen';
 import { useFonts, Montserrat_700Bold } from '@expo-google-fonts/montserrat';
 
 export default function StorePage() {
   const navigation = useNavigation();
   const route = useRoute();
-  const { id } = route.params; // Extract the 'id' parameter
+  const { id } = route.params;
 
   const [store, setStore] = useState(null);
   const [loading, setLoading] = useState(true);
   const [favorite, setFavorite] = useState(false);
-  const theme = useTheme();
 
-  // Prevent the splash screen from auto-hiding
   useEffect(() => {
     SplashScreen.preventAutoHideAsync();
   }, []);
 
-  // Load custom fonts
   let [fontsLoaded] = useFonts({
     Montserrat_700Bold,
   });
@@ -48,7 +45,6 @@ export default function StorePage() {
     }
   }, [fontsLoaded]);
 
-  // Fetch store data when the component mounts
   useEffect(() => {
     const fetchStoreData = async () => {
       try {
@@ -71,7 +67,6 @@ export default function StorePage() {
     fetchStoreData();
   }, [id]);
 
-  // Load favorite status from AsyncStorage
   useEffect(() => {
     const loadFavorites = async () => {
       try {
@@ -88,7 +83,6 @@ export default function StorePage() {
     loadFavorites();
   }, [id]);
 
-  // Handler for the Contact button
   const handleContact = () => {
     if (store && store.website) {
       Linking.openURL(store.website).catch((err) =>
@@ -99,7 +93,6 @@ export default function StorePage() {
     }
   };
 
-  // Handler for the Directions button
   const handleDirections = () => {
     if (store && store.latitude && store.longitude) {
       const { latitude, longitude } = store;
@@ -115,7 +108,6 @@ export default function StorePage() {
     }
   };
 
-  // Handler for the Share button
   const handleShare = async () => {
     if (store) {
       try {
@@ -138,7 +130,6 @@ export default function StorePage() {
     }
   };
 
-  // Handler for the Favorite button
   const handleFavorite = async () => {
     try {
       const favoritesData = await AsyncStorage.getItem('favorites');
@@ -156,12 +147,10 @@ export default function StorePage() {
     }
   };
 
-  // Handler to navigate back
   const handleGoBack = () => {
     navigation.goBack();
   };
 
-  // Function to get category icons
   const getCategoryIcon = (category) => {
     switch (category) {
       case 'CBD':
@@ -171,7 +160,7 @@ export default function StorePage() {
       case 'Clubs':
         return <MaterialIcons name="group" size={16} color="#FF9800" />;
       case 'Oils':
-        return <MaterialIcons name="oil-barrel" size={16} color="#9C27B0" />;
+        return <MaterialIcons name="opacity" size={16} color="#9C27B0" />;
       case 'Edibles':
         return <MaterialIcons name="cake" size={16} color="#FFEB3B" />;
       case 'Flower':
@@ -184,22 +173,20 @@ export default function StorePage() {
   };
 
   if (loading) {
-    // Display a loading indicator while fetching data
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#2e7d32" />
+        <ActivityIndicator size="large" color="#FFC107" />
         <Text style={styles.loadingText}>Loading store information...</Text>
       </View>
     );
   }
 
   if (!store) {
-    // Display an error message if store data is not available
     return (
       <View style={styles.errorContainer}>
         <Text style={styles.errorText}>Store not found.</Text>
         <TouchableOpacity onPress={handleGoBack} style={styles.backButton}>
-          <MaterialIcons name="arrow-back" size={24} color="#2e7d32" />
+          <MaterialIcons name="arrow-back" size={24} color="#FFC107" />
           <Text style={styles.backButtonText}>Go Back</Text>
         </TouchableOpacity>
       </View>
@@ -208,96 +195,93 @@ export default function StorePage() {
 
   return (
     <View style={styles.container}>
-      {/* Store Title */}
       <Text style={styles.storeTitle}>{store.title}</Text>
 
       <ScrollView contentContainerStyle={styles.contentContainer}>
-        {/* Store Image */}
         <Image
           source={
             store.logo
               ? { uri: store.logo }
-              : require('../assets/default-logo.png') // Provide a default image
+              : require('../assets/default-logo.png')
           }
           style={styles.storeImage}
-          resizeMode="contain" // Changed from 'cover' to 'contain'
+          resizeMode="contain" // Changed to 'contain'
           accessible={true}
           accessibilityLabel={`${store.title} Logo`}
         />
 
-        {/* Store Description */}
         <View style={styles.detailsContainer}>
           <Text style={styles.storeDescription}>{store.description}</Text>
 
-          {/* Categories */}
           <View style={styles.categoriesContainer}>
             {store.categories &&
               store.categories.map((category, index) => (
                 <Chip
                   key={index}
                   icon={() => getCategoryIcon(category)}
-                  onPress={() => Alert.alert('Category Pressed', category)}
+                  onPress={() => Alert.alert('Category', category)}
                   style={styles.chip}
+                  textStyle={styles.chipText}
                 >
                   {category}
                 </Chip>
               ))}
           </View>
 
-          {/* Website */}
           {store.website ? (
-            <TouchableOpacity onPress={handleContact} style={styles.websiteContainer}>
-              <MaterialIcons name="web" size={20} color="#1e88e5" />
-              <Text style={styles.websiteText}>{store.website}</Text>
+            <TouchableOpacity onPress={handleContact} style={styles.websiteButton}>
+              <MaterialIcons name="web" size={24} color="#FFFFFF" />
+              <Text style={styles.websiteButtonText}>Visit Website</Text>
             </TouchableOpacity>
           ) : null}
         </View>
 
-        {/* Action Buttons */}
         <View style={styles.actionButtonsContainer}>
-          <IconButton
-            icon="phone"
-            color="#fff"
-            size={24}
+          <TouchableOpacity
             onPress={handleContact}
             style={styles.actionButton}
             accessibilityLabel="Contact"
-          />
+          >
+            <MaterialIcons name="phone" size={24} color="#FFFFFF" />
+            <Text style={styles.actionButtonText}>Contact</Text>
+          </TouchableOpacity>
 
-          <IconButton
-            icon="map-marker"
-            color="#fff"
-            size={24}
+          <TouchableOpacity
             onPress={handleDirections}
             style={styles.actionButton}
             accessibilityLabel="Directions"
-          />
+          >
+            <MaterialIcons name="directions" size={24} color="#FFFFFF" />
+            <Text style={styles.actionButtonText}>Directions</Text>
+          </TouchableOpacity>
 
-          <IconButton
-            icon="share-variant"
-            color="#fff"
-            size={24}
+          <TouchableOpacity
             onPress={handleShare}
             style={styles.actionButton}
             accessibilityLabel="Share"
-          />
+          >
+            <MaterialIcons name="share" size={24} color="#FFFFFF" />
+            <Text style={styles.actionButtonText}>Share</Text>
+          </TouchableOpacity>
         </View>
       </ScrollView>
     </View>
   );
 }
 
+const ACCENT_COLOR = '#FFC107';
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
-    paddingHorizontal: 16, // Added horizontal padding
-    paddingTop: 16, // Added top padding
+    backgroundColor: '#FFFFFF', // Changed background to white
+    paddingHorizontal: 16,
+    paddingTop: 16,
   },
   storeTitle: {
-    fontFamily: 'Montserrat_700Bold', // Custom font
-    fontSize: 24,
-    color: '#2e7d32',
+    fontFamily: 'Montserrat_700Bold',
+    fontSize: 28,
+    color: '#000000', // Changed text color to black
     textAlign: 'center',
     marginBottom: 16,
   },
@@ -310,7 +294,7 @@ const styles = StyleSheet.create({
     height: 200,
     borderRadius: 12,
     marginBottom: 20,
-    backgroundColor: '#e0e0e0', // Placeholder background color
+    backgroundColor: '#FFFFFF', // Match background color
   },
   detailsContainer: {
     width: '100%',
@@ -318,7 +302,7 @@ const styles = StyleSheet.create({
   },
   storeDescription: {
     fontSize: 16,
-    color: '#555',
+    color: '#333333', // Darker text color for readability
     marginBottom: 10,
     textAlign: 'justify',
   },
@@ -330,49 +314,68 @@ const styles = StyleSheet.create({
   chip: {
     marginRight: 8,
     marginBottom: 8,
-    backgroundColor: '#e0e0e0',
+    backgroundColor: '#F0F0F0',
+    borderColor: ACCENT_COLOR,
+    borderWidth: 1,
   },
-  websiteContainer: {
+  chipText: {
+    color: '#000000',
+  },
+  websiteButton: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: ACCENT_COLOR,
+    borderRadius: 30,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
     marginTop: 10,
   },
-  websiteText: {
+  websiteButtonText: {
+    color: '#FFFFFF',
     fontSize: 16,
-    color: '#1e88e5',
-    textDecorationLine: 'underline',
-    marginLeft: 5,
+    marginLeft: 8,
   },
   actionButtonsContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    width: '60%', // Adjusted width for better spacing
+    width: '100%',
     marginTop: 10,
   },
   actionButton: {
-    backgroundColor: '#2e7d32',
+    flex: 1,
+    backgroundColor: ACCENT_COLOR,
     borderRadius: 30,
     marginHorizontal: 5,
+    paddingVertical: 10,
+    alignItems: 'center',
+  },
+  actionButtonText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    marginTop: 4,
   },
   loadingContainer: {
     flex: 1,
+    backgroundColor: '#FFFFFF', // Changed to white
     justifyContent: 'center',
     alignItems: 'center',
   },
   loadingText: {
     marginTop: 10,
     fontSize: 16,
-    color: '#2e7d32',
+    color: '#000000', // Dark text color
   },
   errorContainer: {
     flex: 1,
+    backgroundColor: '#FFFFFF', // Changed to white
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
   },
   errorText: {
     fontSize: 18,
-    color: '#f44336',
+    color: '#F44336',
     marginBottom: 20,
     textAlign: 'center',
   },
@@ -383,6 +386,6 @@ const styles = StyleSheet.create({
   backButtonText: {
     marginLeft: 5,
     fontSize: 16,
-    color: '#2e7d32',
+    color: '#FFC107',
   },
 });
