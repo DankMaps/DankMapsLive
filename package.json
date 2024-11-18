@@ -11,12 +11,12 @@
   "dependencies": {
     "@aws-sdk/client-s3": "^3.689.0",
     "@expo-google-fonts/montserrat": "^0.2.3",
-    "@expo/vector-icons": "^14.0.3",
+    "@expo/vector-icons": "^14.0.2",
     "@gorhom/bottom-sheet": "^5.0.4",
     "@ngrok/ngrok": "^1.4.1",
     "@react-native-async-storage/async-storage": "1.23.1",
     "@react-native-community/masked-view": "^0.1.11",
-    "@react-native-picker/picker": "^2.9.0",
+    "@react-native-picker/picker": "2.9.0",
     "@react-navigation/bottom-tabs": "^6.6.1",
     "@react-navigation/material-bottom-tabs": "^6.2.29",
     "@react-navigation/native": "^6.1.18",
@@ -35,11 +35,11 @@
     "mongoose": "^8.8.1",
     "papaparse": "^5.4.1",
     "react": "18.3.1",
-    "react-native": "^0.76.2",
+    "react-native": "0.76.2",
     "react-native-dropdown-picker": "^5.4.6",
     "react-native-fast-image": "^8.6.3",
     "react-native-gesture-handler": "~2.20.2",
-    "react-native-get-random-values": "^1.11.0",
+    "react-native-get-random-values": "~1.11.0",
     "react-native-google-places-autocomplete": "^2.5.7",
     "react-native-maps": "1.18.0",
     "react-native-modal": "^13.0.1",
@@ -56,7 +56,7 @@
     "expo-splash-screen": "~0.29.10"
   },
   "devDependencies": {
-    "@babel/core": "^7.20.0"
+    "@babel/core": "^7.25.2"
   },
   "private": true
 }
