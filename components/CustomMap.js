@@ -1,12 +1,13 @@
 // src/components/CustomMap.js
 
 import React, { useEffect, useRef } from 'react';
-import { StyleSheet, Image, Platform, Linking, Alert } from 'react-native';
+import { StyleSheet, Image } from 'react-native';
 import MapView from 'react-native-maps';
 import { Marker } from 'react-native-maps';
 import { FontAwesome5, MaterialIcons } from '@expo/vector-icons';
 import PropTypes from 'prop-types';
-import { getRegionForCoordinates } from '../utils/helpers';
+// Import the API key if needed
+// import { GOOGLE_MAPS_API_KEY } from '@env'; // Uncomment if you need to use the API key in JavaScript
 
 const CustomMap = ({
   mapRegion,
@@ -54,7 +55,9 @@ const CustomMap = ({
       case 'Flower':
         return <FontAwesome5 name="spa" size={16} color="#8BC34A" />;
       case 'Delivery':
-        return <MaterialIcons name="delivery-dining" size={16} color="#03A9F4" />;
+        return (
+          <MaterialIcons name="delivery-dining" size={16} color="#03A9F4" />
+        );
       default:
         return null;
     }
@@ -67,6 +70,8 @@ const CustomMap = ({
       region={mapRegion}
       showsUserLocation={true}
       onRegionChangeComplete={setMapRegion}
+      // provider={MapView.PROVIDER_GOOGLE} // Uncomment if you want to explicitly set Google as the map provider
+      // apiKey={GOOGLE_MAPS_API_KEY} // Not required for react-native-maps when set via native config
     >
       {storeData.map((store) => (
         <Marker

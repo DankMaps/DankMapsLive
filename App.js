@@ -13,7 +13,6 @@ import {
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { Provider as PaperProvider } from 'react-native-paper';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { lightTheme, darkTheme } from './theme'; // Import your custom themes
 import * as Notifications from 'expo-notifications';
 import Constants from 'expo-constants';
@@ -24,6 +23,10 @@ import MainTabNavigator from './navigation/MainTabNavigator';
 import TermsOfUse from './screens/TermsOfUse'; // Import TermsOfUse
 import PrivacyPolicy from './screens/PrivacyPolicy'; // Import PrivacyPolicy
 import StorePage from './screens/StorePage'; // Import StorePage
+
+// Import Firebase auth and onAuthStateChanged
+import { auth } from './firebase';
+import { onAuthStateChanged } from 'firebase/auth';
 
 // Set the handler for notifications
 Notifications.setNotificationHandler({
@@ -37,24 +40,20 @@ Notifications.setNotificationHandler({
 const Stack = createStackNavigator();
 
 export default function App() {
-  const [initialRoute, setInitialRoute] = useState(null);
+  const [initialRoute, setInitialRoute] = useState('Login');
   const colorScheme = useColorScheme(); // Detects system color scheme
 
   const [expoPushToken, setExpoPushToken] = useState('');
   const notificationListener = useRef();
   const responseListener = useRef();
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const checkUser = async () => {
-      try {
-        const userId = await AsyncStorage.getItem('userId');
-        setInitialRoute(userId ? 'Main' : 'Login');
-      } catch (error) {
-        console.log('Error checking user:', error);
-        setInitialRoute('Login'); // Default to Login on error
-      }
-    };
-    checkUser();
+    const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
+      setInitialRoute(user ? 'Main' : 'Login');
+      setLoading(false);
+    });
+    return unsubscribeAuth;
   }, []);
 
   useEffect(() => {
@@ -89,7 +88,7 @@ export default function App() {
     };
   }, []);
 
-  if (!initialRoute) {
+  if (loading) {
     // Render a loading indicator while checking auth state
     return (
       <View style={styles.loadingContainer}>

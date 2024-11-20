@@ -83,6 +83,23 @@ export default function StorePage() {
     loadFavorites();
   }, [id]);
 
+  // Set the logo in the header
+  useEffect(() => {
+    navigation.setOptions({
+      headerTitle: () => (
+        <Image
+          source={require('../assets/DankMaps.png')}
+          style={{ width: 200, height: 70, resizeMode: 'contain' }}
+        />
+      ),
+      headerTitleAlign: 'center',
+      headerStyle: {
+        backgroundColor: '#fff',
+      },
+      headerTintColor: '#2e7d32',
+    });
+  }, [navigation]);
+
   const handleContact = () => {
     if (store && store.website) {
       Linking.openURL(store.website).catch((err) =>
@@ -175,7 +192,7 @@ export default function StorePage() {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#FFC107" />
+        <ActivityIndicator size="large" color="#6200ee" />
         <Text style={styles.loadingText}>Loading store information...</Text>
       </View>
     );
@@ -186,7 +203,7 @@ export default function StorePage() {
       <View style={styles.errorContainer}>
         <Text style={styles.errorText}>Store not found.</Text>
         <TouchableOpacity onPress={handleGoBack} style={styles.backButton}>
-          <MaterialIcons name="arrow-back" size={24} color="#FFC107" />
+          <MaterialIcons name="arrow-back" size={24} color="#6200ee" />
           <Text style={styles.backButtonText}>Go Back</Text>
         </TouchableOpacity>
       </View>
@@ -195,6 +212,7 @@ export default function StorePage() {
 
   return (
     <View style={styles.container}>
+      {/* Remove the logo from here since it's now in the header */}
       <Text style={styles.storeTitle}>{store.title}</Text>
 
       <ScrollView contentContainerStyle={styles.contentContainer}>
@@ -205,7 +223,7 @@ export default function StorePage() {
               : require('../assets/default-logo.png')
           }
           style={styles.storeImage}
-          resizeMode="contain" // Changed to 'contain'
+          resizeMode="contain"
           accessible={true}
           accessibilityLabel={`${store.title} Logo`}
         />
@@ -269,32 +287,33 @@ export default function StorePage() {
   );
 }
 
-const ACCENT_COLOR = '#FFC107';
+const ACCENT_COLOR = '#6200ee';
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF', // Changed background to white
+    backgroundColor: '#FFFFFF',
     paddingHorizontal: 16,
-    paddingTop: 16,
+    paddingTop: 30,
   },
+  // Removed the 'logo' style since the logo is now in the header
   storeTitle: {
     fontFamily: 'Montserrat_700Bold',
     fontSize: 28,
-    color: '#000000', // Changed text color to black
+    color: '#000000',
     textAlign: 'center',
-    marginBottom: 16,
+    marginBottom: 20,
   },
   contentContainer: {
-    paddingBottom: 20,
+    paddingBottom: 30,
     alignItems: 'center',
   },
   storeImage: {
     width: '100%',
     height: 200,
     borderRadius: 12,
-    marginBottom: 20,
-    backgroundColor: '#FFFFFF', // Match background color
+    marginBottom: 40,
+    backgroundColor: '#FFFFFF',
   },
   detailsContainer: {
     width: '100%',
@@ -302,7 +321,7 @@ const styles = StyleSheet.create({
   },
   storeDescription: {
     fontSize: 16,
-    color: '#333333', // Darker text color for readability
+    color: '#333333',
     marginBottom: 10,
     textAlign: 'justify',
   },
@@ -357,18 +376,18 @@ const styles = StyleSheet.create({
   },
   loadingContainer: {
     flex: 1,
-    backgroundColor: '#FFFFFF', // Changed to white
+    backgroundColor: '#FFFFFF',
     justifyContent: 'center',
     alignItems: 'center',
   },
   loadingText: {
     marginTop: 10,
     fontSize: 16,
-    color: '#000000', // Dark text color
+    color: '#000000',
   },
   errorContainer: {
     flex: 1,
-    backgroundColor: '#FFFFFF', // Changed to white
+    backgroundColor: '#FFFFFF',
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
@@ -386,6 +405,7 @@ const styles = StyleSheet.create({
   backButtonText: {
     marginLeft: 5,
     fontSize: 16,
-    color: '#FFC107',
+    color: '#6200ee',
   },
 });
+

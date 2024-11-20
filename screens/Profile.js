@@ -10,32 +10,43 @@ import {
   ScrollView,
   SafeAreaView,
 } from 'react-native';
-import { Text, Button, Avatar, List } from 'react-native-paper';
+import { Text, Button, Avatar, List, ActivityIndicator } from 'react-native-paper';
 import * as ImagePicker from 'expo-image-picker';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import TopBar from '../components/TopBar';
 
+// Import auth and storage from your firebase.js file
+import { auth, storage } from '../firebase';
+import { signOut } from 'firebase/auth';
+import { ref, getDownloadURL, uploadBytes } from 'firebase/storage';
+
 const ProfileScreen = ({ navigation }) => {
-  const [userName, setUserName] = useState('');
-  const [email, setEmail] = useState('');
-  const [profilePic, setProfilePic] = useState(null);
+  const [userName, setUserName] = useState(''); // User's display name
+  const [email, setEmail] = useState('');       // User's email
+  const [profilePic, setProfilePic] = useState(null); // URL of profile picture
+  const [uploading, setUploading] = useState(false);  // Uploading state
+  const [loading, setLoading] = useState(true);       // Loading state for profile data
 
   useEffect(() => {
-    const fetchUserData = async () => {
-      try {
-        const storedUserName = await AsyncStorage.getItem('userName');
-        const storedEmail = await AsyncStorage.getItem('email');
-        const storedProfilePic = await AsyncStorage.getItem('profilePic');
+    const user = auth.currentUser;
 
-        if (storedUserName) setUserName(storedUserName);
-        if (storedEmail) setEmail(storedEmail);
-        if (storedProfilePic) setProfilePic(storedProfilePic);
-      } catch (error) {
-        console.log('Error fetching user data:', error);
-      }
-    };
+    if (user) {
+      setUserName(user.displayName || '');
+      setEmail(user.email || '');
 
-    fetchUserData();
+      // Get profile picture URL from Firebase storage if it exists
+      const storageRef = ref(storage, `profilePictures/${user.uid}`);
+      getDownloadURL(storageRef)
+        .then((url) => {
+          setProfilePic(url);
+          setLoading(false);
+        })
+        .catch((error) => {
+          console.log('No profile picture found:', error);
+          setLoading(false);
+        });
+    } else {
+      setLoading(false);
+    }
   }, []);
 
   const pickImage = async () => {
@@ -52,21 +63,41 @@ const ProfileScreen = ({ navigation }) => {
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
       aspect: [1, 1],
-      quality: 0.5,
+      quality: 0.7,
     });
 
     if (!result.cancelled) {
-      setProfilePic(result.uri);
-      await AsyncStorage.setItem('profilePic', result.uri);
+      setUploading(true);
+      try {
+        const response = await fetch(result.uri);
+        const blob = await response.blob();
+
+        const user = auth.currentUser;
+        const storageRef = ref(storage, `profilePictures/${user.uid}`);
+
+        await uploadBytes(storageRef, blob);
+
+        // Get the download URL
+        const url = await getDownloadURL(storageRef);
+
+        setProfilePic(url);
+        setUploading(false);
+        Alert.alert('Success', 'Profile picture updated successfully.');
+      } catch (error) {
+        console.log('Error uploading image:', error);
+        setUploading(false);
+        Alert.alert('Error', 'Failed to upload profile picture.');
+      }
     }
   };
 
   const handleSignOut = async () => {
     try {
-      await AsyncStorage.clear();
+      await signOut(auth);
       navigation.replace('Login');
     } catch (error) {
       console.log('Error signing out:', error);
+      Alert.alert('Error', 'Failed to sign out. Please try again.');
     }
   };
 
@@ -82,6 +113,15 @@ const ProfileScreen = ({ navigation }) => {
     }
   };
 
+  if (loading) {
+    // Show a loading indicator while fetching user data
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#2e7d32" />
+      </View>
+    );
+  }
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
@@ -94,10 +134,12 @@ const ProfileScreen = ({ navigation }) => {
               accessibilityLabel="Change Profile Picture"
               accessibilityRole="button"
             >
-              {profilePic ? (
-                <Avatar.Image size={90} source={{ uri: profilePic }} />
+              {uploading ? (
+                <ActivityIndicator size="large" color="#2e7d32" />
+              ) : profilePic ? (
+                <Avatar.Image size={100} source={{ uri: profilePic }} />
               ) : (
-                <Avatar.Icon size={90} icon="camera" />
+                <Avatar.Icon size={100} icon="account" />
               )}
             </TouchableOpacity>
             <View style={styles.userInfo}>
@@ -107,19 +149,21 @@ const ProfileScreen = ({ navigation }) => {
           </View>
 
           <Button
-            mode="outlined"
-            onPress={handleSignOut}
-            style={styles.button}
-          >
-            Sign Out
-          </Button>
-
-          <Button
             mode="contained"
             onPress={handleShare}
             style={styles.shareButton}
+            icon="share-variant"
           >
             Share the App
+          </Button>
+
+          <Button
+            mode="outlined"
+            onPress={handleSignOut}
+            style={styles.button}
+            icon="logout"
+          >
+            Sign Out
           </Button>
 
           {/* Divider */}
@@ -151,51 +195,55 @@ const ProfileScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#ffffff',
+    backgroundColor: '#fff',
   },
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
   },
   scrollContent: {
-    padding: 25,
-    paddingTop: 20,
+    paddingHorizontal: 20,
+    paddingBottom: 20,
   },
   header: {
-    flexDirection: 'row',
     alignItems: 'center',
+    marginTop: 30,
     marginBottom: 20,
   },
   userInfo: {
-    marginLeft: 15,
+    alignItems: 'center',
+    marginTop: 15,
   },
   userName: {
-    fontSize: 24,
+    fontSize: 22,
     fontWeight: 'bold',
-    color: '#333',
+    color: '#2e7d32',
   },
   email: {
     fontSize: 16,
-    color: '#777',
+    color: '#555',
+    marginTop: 5,
   },
   button: {
-    marginTop: 10,
-    width: '100%',
-    height: 50,
-    justifyContent: 'center',
-    borderRadius: 10,
+    marginTop: 20,
+    alignSelf: 'center',
+    width: '80%',
+    borderColor: '#2e7d32',
   },
   shareButton: {
-    marginTop: 15,
-    width: '100%',
-    height: 50,
-    justifyContent: 'center',
-    borderRadius: 10,
+    marginTop: 10,
+    alignSelf: 'center',
+    width: '80%',
+    backgroundColor: '#2e7d32',
   },
   divider: {
     marginVertical: 30,
     borderBottomColor: '#ccc',
     borderBottomWidth: StyleSheet.hairlineWidth,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });
 

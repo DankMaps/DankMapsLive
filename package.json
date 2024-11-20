@@ -14,7 +14,7 @@
     "@expo/vector-icons": "^14.0.2",
     "@gorhom/bottom-sheet": "^5.0.4",
     "@ngrok/ngrok": "^1.4.1",
-    "@react-native-async-storage/async-storage": "1.23.1",
+    "@react-native-async-storage/async-storage": "^1.23.1",
     "@react-native-community/masked-view": "^0.1.11",
     "@react-native-firebase/app": "^21.5.0",
     "@react-native-firebase/messaging": "^21.5.0",
@@ -27,14 +27,18 @@
     "axios": "^1.7.7",
     "expo": "~52.0.7",
     "expo-app-loading": "^2.1.1",
+    "expo-application": "~6.0.1",
     "expo-asset": "~11.0.1",
+    "expo-auth-session": "~6.0.0",
     "expo-font": "~13.0.1",
     "expo-image-picker": "~16.0.2",
     "expo-linking": "~7.0.2",
     "expo-location": "~18.0.1",
+    "expo-notifications": "~0.29.8",
     "expo-random": "~14.0.1",
     "expo-splash-screen": "~0.29.10",
     "expo-status-bar": "~2.0.0",
+    "firebase": "^11.0.2",
     "mongoose": "^8.8.1",
     "papaparse": "^5.4.1",
     "react": "18.3.1",
@@ -55,11 +59,11 @@
     "react-native-screens": "~4.0.0",
     "react-native-vector-icons": "^10.2.0",
     "socket.io-client": "^4.8.0",
-    "supercluster": "^8.0.1",
-    "expo-notifications": "~0.29.8"
+    "supercluster": "^8.0.1"
   },
   "devDependencies": {
-    "@babel/core": "^7.25.2"
+    "@babel/core": "^7.25.2",
+    "react-native-dotenv": "^3.4.11"
   },
   "private": true
 }

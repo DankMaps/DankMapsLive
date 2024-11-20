@@ -12,56 +12,36 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import { Button, Title, Text } from 'react-native-paper';
-// Removed axios import since we're not using it in test mode
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { auth } from '../firebase'; // Import Firebase auth
+import { signInWithEmailAndPassword } from 'firebase/auth';
 
 export default function LoginScreen({ navigation }) {
   const slideAnim = useRef(new Animated.Value(500)).current;
-  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState(''); // Changed to email
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
 
-  // Updated test account credentials
-  const TEST_USERNAME = 'test';
-  const TEST_PASSWORD = '1';
-  const TEST_EMAIL = 'test@example.com'; // Assigned email for the test user
-
   const handleLogin = async () => {
+    if (!email || !password) {
+      Alert.alert('Error', 'Please enter an email and password');
+      return;
+    }
+
+    setLoading(true);
+
     try {
-      if (!username || !password) {
-        Alert.alert('Error', 'Please enter a username and password');
-        return;
-      }
-
-      setLoading(true);
-
-      // Check if the entered credentials match the test account
-      if (
-        username.trim().toLowerCase() === TEST_USERNAME.toLowerCase() &&
-        password === TEST_PASSWORD
-      ) {
-        // Save user data to AsyncStorage
-        await AsyncStorage.setItem('userId', '1');
-        await AsyncStorage.setItem('userName', TEST_USERNAME);
-        await AsyncStorage.setItem('email', TEST_EMAIL);
-        setLoading(false);
-        navigation.replace('Main');
-      } else {
-        setLoading(false);
-        Alert.alert('Error', 'Invalid username or password');
-      }
+      await signInWithEmailAndPassword(auth, email.trim(), password);
+      setLoading(false);
+      navigation.replace('Main');
     } catch (error) {
       setLoading(false);
       console.log('Login error:', error);
-      Alert.alert('Error', 'An unexpected error occurred during login');
+      Alert.alert('Error', error.message);
     }
   };
 
   const handleRegister = () => {
-    Alert.alert(
-      'Registration Disabled',
-      'Registration is disabled in test mode.'
-    );
+    navigation.navigate('Register');
   };
 
   useEffect(() => {
@@ -88,13 +68,15 @@ export default function LoginScreen({ navigation }) {
 
         <Title style={styles.title}>Welcome Back!</Title>
 
-        {/* Username Input */}
+        {/* Email Input */}
         <TextInput
           style={styles.input}
-          placeholder="Username"
+          placeholder="Email"
           placeholderTextColor="#000"
-          value={username}
-          onChangeText={setUsername}
+          value={email}
+          onChangeText={setEmail}
+          keyboardType="email-address"
+          autoCapitalize="none"
         />
 
         {/* Password Input */}
